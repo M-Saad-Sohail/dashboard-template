@@ -5,10 +5,7 @@ import type { NextRequest } from "next/server";
 const publicRoutes = [
   "/auth/signin", 
   "/auth/signup", 
-  "/auth/forgot-password",
-  "/error-pages/error-404",
-  "/error-pages/error-500",
-  "/error-pages/error-503"
+  "/auth/forgot-password"
 ];
 
 // List of auth routes that should redirect to dashboard if user is already authenticated
