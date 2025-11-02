@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Select from '@/components/form/Select';
-import { AudioAlbum } from '@/lib/admin-api-client';
+import { AudioAlbum } from '@/types/album';
 
 interface AlbumSelectorProps {
   albums: AudioAlbum[];

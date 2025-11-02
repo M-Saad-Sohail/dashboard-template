@@ -20,7 +20,7 @@ import {
 } from '@/_core/features/adminAlbumDetailsSlice';
 import { updateAlbum } from '@/_core/features/adminAlbumsSlice';
 import { fetchAdminTracks } from '@/_core/features/adminTracksSlice';
-import type { Audio, AudioAlbum } from '@/lib/admin-api-client';
+import type { Audio, AudioAlbum } from '@/types/album';
 import { PlusIcon } from '@/icons';
 
 interface PageProps {

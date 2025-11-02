@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { adminApiClient, AudioAlbum, Audio } from '@/lib/admin-api-client';
+import { AudioAlbum, Audio } from '@/types/album';
+import makeRequest from '@/lib/axios-client';
 import { RootState } from '../store/store';
 
 interface AdminAlbumDetailsState {
@@ -55,82 +56,129 @@ const initialState: AdminAlbumDetailsState = {
 };
 
 // Async Thunks
+interface FetchAlbumBySlugParams {
+  slug: string;
+  token: string | null;
+}
+
 export const fetchAlbumBySlug = createAsyncThunk<
   AudioAlbum,
-  string,
+  FetchAlbumBySlugParams,
   { rejectValue: string }
 >(
   'adminAlbumDetails/fetchAlbumBySlug',
-  async (slug, { rejectWithValue }) => {
+  async ({ slug, token }, { rejectWithValue }) => {
     try {
-      const response = await adminApiClient.get(`/albums/${slug}`);
-      return response;
+      const response = await makeRequest('get', `/albums/${slug}`, {
+        token,
+        errorMessage: 'Failed to fetch album details',
+      });
+      return response as AudioAlbum;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to fetch album details');
+      return rejectWithValue(error || 'Failed to fetch album details');
     }
   }
 );
+
+interface FetchAllAlbumsParams {
+  token: string | null;
+}
 
 export const fetchAllAlbumsForDropdown = createAsyncThunk<
   AudioAlbum[],
-  void,
+  FetchAllAlbumsParams,
   { rejectValue: string }
 >(
   'adminAlbumDetails/fetchAllAlbumsForDropdown',
-  async (_, { rejectWithValue }) => {
+  async ({ token }, { rejectWithValue }) => {
     try {
-      const response = await adminApiClient.get('/meditation-albums?limit=100');
+      const response = await makeRequest('get', '/meditation-albums?limit=100', {
+        token,
+        errorMessage: 'Failed to fetch albums',
+      });
       return response.collection || [];
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to fetch albums');
+      return rejectWithValue(error || 'Failed to fetch albums');
     }
   }
 );
+
+interface AddTrackToAlbumParams {
+  albumId: string;
+  trackId: string;
+  token: string | null;
+}
 
 export const addTrackToAlbum = createAsyncThunk<
   { albumId: string; trackId: string },
-  { albumId: string; trackId: string },
+  AddTrackToAlbumParams,
   { rejectValue: string }
 >(
   'adminAlbumDetails/addTrackToAlbum',
-  async ({ albumId, trackId }, { rejectWithValue }) => {
+  async ({ albumId, trackId, token }, { rejectWithValue }) => {
     try {
-      await adminApiClient.post(`/albums/${albumId}/tracks`, { trackId });
+      await makeRequest('post', `/albums/${albumId}/tracks`, {
+        data: { trackId },
+        token,
+        successMessage: 'Track added to album successfully!',
+        errorMessage: 'Failed to add track to album',
+      });
       return { albumId, trackId };
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to add track to album');
+      return rejectWithValue(error || 'Failed to add track to album');
     }
   }
 );
+
+interface RemoveTrackFromAlbumParams {
+  albumId: string;
+  trackId: string;
+  token: string | null;
+}
 
 export const removeTrackFromAlbum = createAsyncThunk<
   { albumId: string; trackId: string },
-  { albumId: string; trackId: string },
+  RemoveTrackFromAlbumParams,
   { rejectValue: string }
 >(
   'adminAlbumDetails/removeTrackFromAlbum',
-  async ({ albumId, trackId }, { rejectWithValue }) => {
+  async ({ albumId, trackId, token }, { rejectWithValue }) => {
     try {
-      await adminApiClient.delete(`/albums/${albumId}/tracks/${trackId}`);
+      await makeRequest('delete', `/albums/${albumId}/tracks/${trackId}`, {
+        token,
+        successMessage: 'Track removed from album successfully!',
+        errorMessage: 'Failed to remove track from album',
+      });
       return { albumId, trackId };
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to remove track from album');
+      return rejectWithValue(error || 'Failed to remove track from album');
     }
   }
 );
 
+interface ReorderAlbumTracksParams {
+  albumId: string;
+  trackIds: string[];
+  token: string | null;
+}
+
 export const reorderAlbumTracks = createAsyncThunk<
   { albumId: string; trackIds: string[] },
-  { albumId: string; trackIds: string[] },
+  ReorderAlbumTracksParams,
   { rejectValue: string }
 >(
   'adminAlbumDetails/reorderAlbumTracks',
-  async ({ albumId, trackIds }, { rejectWithValue }) => {
+  async ({ albumId, trackIds, token }, { rejectWithValue }) => {
     try {
-      await adminApiClient.put(`/albums/${albumId}/tracks/order`, { trackIds });
+      await makeRequest('put', `/albums/${albumId}/tracks/order`, {
+        data: { trackIds },
+        token,
+        successMessage: 'Tracks reordered successfully!',
+        errorMessage: 'Failed to reorder tracks',
+      });
       return { albumId, trackIds };
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to reorder tracks');
+      return rejectWithValue(error || 'Failed to reorder tracks');
     }
   }
 );

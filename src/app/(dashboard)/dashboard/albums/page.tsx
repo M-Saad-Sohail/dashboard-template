@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import { useRouter } from 'next/navigation';
 import PageBreadCrumb from '@/components/common/PageBreadCrumb';
 import ButtonAction from '@/components/ui/button/ButtonAction';
 import AlertMessage from '@/components/ui/alert/AlertMessage';
@@ -21,11 +22,16 @@ import {
   setLimit,
   clearError
 } from '@/_core/features/adminAlbumsSlice';
-import { AudioAlbum } from '@/lib/admin-api-client';
+import { AudioAlbum } from '@/types/album';
 import { PlusIcon } from '@/icons';
 
 const AlbumsPage = () => {
+  const router = useRouter();
   const dispatch = useAppDispatch();
+  
+  // Get auth token
+  const { authToken, isAuthenticated } = useAppSelector((state) => state.auth);
+  
   const { 
     albums, 
     currentAlbum, 
@@ -41,43 +47,49 @@ const AlbumsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Redirect if not authenticated
   useEffect(() => {
-    dispatch(fetchAdminAlbums());
-  }, [dispatch, filters]);
+    if (!isAuthenticated) {
+      router.push('/auth/signin');
+    }
+  }, [isAuthenticated, router]);
+
+  // Fetch albums when filters change or token is available
+  useEffect(() => {
+    if (authToken) {
+      dispatch(fetchAdminAlbums({ token: authToken }));
+    }
+  }, [dispatch, authToken, filters]);
 
   const handleApplyFilters = (newFilters: { section: string; groupBy: string; search: string }) => {
     dispatch(setFilters({ ...newFilters, page: 1 }));
   };
 
   const handleCreateAlbum = async (albumData: Omit<AudioAlbum, 'id'>) => {
-    const result = await dispatch(createAlbum(albumData));
+    const result = await dispatch(createAlbum({ albumData, token: authToken }));
     if (createAlbum.fulfilled.match(result)) {
       setIsCreateModalOpen(false);
-      setSuccessMessage('Album created successfully!');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      // Toast notification shown automatically
     }
   };
 
   const handleUpdateAlbum = async (albumData: Omit<AudioAlbum, 'id'>) => {
     if (currentAlbum?.id) {
-      const result = await dispatch(updateAlbum({ id: currentAlbum.id, data: albumData }));
+      const result = await dispatch(updateAlbum({ id: currentAlbum.id, data: albumData, token: authToken }));
       if (updateAlbum.fulfilled.match(result)) {
         setIsEditModalOpen(false);
-        setSuccessMessage('Album updated successfully!');
-        setTimeout(() => setSuccessMessage(null), 3000);
+        // Toast notification shown automatically
       }
     }
   };
 
   const handleDeleteAlbum = async () => {
     if (currentAlbum?.id) {
-      const result = await dispatch(deleteAlbum(currentAlbum.id));
+      const result = await dispatch(deleteAlbum({ id: currentAlbum.id, token: authToken }));
       if (deleteAlbum.fulfilled.match(result)) {
         setIsDeleteModalOpen(false);
-        setSuccessMessage('Album deleted successfully!');
-        setTimeout(() => setSuccessMessage(null), 3000);
+        // Toast notification shown automatically
       }
     }
   };
@@ -120,14 +132,7 @@ const AlbumsPage = () => {
           </ButtonAction>
         </div>
 
-        {/* Success/Error Messages */}
-        {successMessage && (
-          <AlertMessage 
-            type="success" 
-            message={successMessage}
-            onClose={() => setSuccessMessage(null)}
-          />
-        )}
+        {/* Error Messages (Success handled by toast) */}
         {error && (
           <AlertMessage 
             type="error" 

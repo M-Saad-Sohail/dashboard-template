@@ -5,7 +5,7 @@ import Modal from '@/components/ui/modal';
 import ButtonAction from '@/components/ui/button/ButtonAction';
 import InputField from '@/components/form/input/InputField';
 import BadgeStatus from '@/components/ui/badge/BadgeStatus';
-import { Audio } from '@/lib/admin-api-client';
+import { Audio } from '@/types/album';
 import { CheckIcon, PlusIcon } from '@/icons';
 
 interface AddTrackModalProps {

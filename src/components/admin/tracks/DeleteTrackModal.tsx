@@ -4,7 +4,7 @@ import React from 'react';
 import Modal from '@/components/ui/modal';
 import ButtonAction from '@/components/ui/button/ButtonAction';
 import AlertMessage from '@/components/ui/alert/AlertMessage';
-import { Audio } from '@/lib/admin-api-client';
+import { Audio } from '@/types/album';
 
 interface DeleteTrackModalProps {
   isOpen: boolean;

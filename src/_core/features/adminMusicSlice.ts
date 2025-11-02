@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { adminApiClient, Audio, PaginationMetadata } from '@/lib/admin-api-client';
+import { Audio, PaginationMetadata } from '@/types/album';
+import makeRequest from '@/lib/axios-client';
 import { RootState } from '../store/store';
 
 interface AdminMusicState {
@@ -33,7 +34,7 @@ const mockMusic: Audio[] = [
     album: null,
     sections: ['RenewMe'],
     position: 1,
-    createdAt: new Date().toISOString(),
+    createdAt: '2024-01-01T00:00:00.000Z',
   },
   {
     id: '2',
@@ -47,7 +48,7 @@ const mockMusic: Audio[] = [
     album: null,
     sections: ['RenewMe', 'Premium'],
     position: 2,
-    createdAt: new Date().toISOString(),
+    createdAt: '2024-01-02T00:00:00.000Z',
   },
 ];
 
@@ -78,13 +79,14 @@ const initialState: AdminMusicState = {
 // Async Thunks
 export const fetchAdminMusic = createAsyncThunk<
   { collection: Audio[]; metadata: PaginationMetadata },
-  void,
+  { token: string | null },
   { rejectValue: string; state: RootState }
 >(
   'adminMusic/fetchMusic',
-  async (_, { rejectWithValue, getState }) => {
+  async ({ token }, { rejectWithValue, getState }) => {
+    const { filters } = getState().adminMusic;
+    
     try {
-      const { filters } = getState().adminMusic;
       const params = new URLSearchParams({
         section: filters.section,
         page: filters.page.toString(),
@@ -95,7 +97,10 @@ export const fetchAdminMusic = createAsyncThunk<
         params.append('search', filters.search);
       }
       
-      const response = await adminApiClient.get(`/music?${params}`);
+      const response = await makeRequest('get', `/music?${params}`, {
+        token,
+        errorMessage: 'Failed to fetch music',
+      });
       
       return {
         collection: response.collection || [],
@@ -103,7 +108,7 @@ export const fetchAdminMusic = createAsyncThunk<
       };
     } catch (error: any) {
       // Return mock data as fallback for testing
-      console.warn('API call failed, using mock data:', error?.message);
+      console.warn('API call failed, using mock data:', error);
       return {
         collection: mockMusic.filter(m => 
           filters.search ? m.title.toLowerCase().includes(filters.search.toLowerCase()) : true
@@ -114,50 +119,80 @@ export const fetchAdminMusic = createAsyncThunk<
   }
 );
 
+interface CreateMusicParams {
+  musicData: Omit<Audio, 'id'>;
+  token: string | null;
+}
+
 export const createMusic = createAsyncThunk<
   Audio,
-  Omit<Audio, 'id'>,
+  CreateMusicParams,
   { rejectValue: string }
 >(
   'adminMusic/createMusic',
-  async (musicData, { rejectWithValue }) => {
+  async ({ musicData, token }, { rejectWithValue }) => {
     try {
-      const response = await adminApiClient.post('/music', musicData);
-      return response;
+      const response = await makeRequest('post', '/music', {
+        data: musicData,
+        token,
+        successMessage: 'Music created successfully!',
+        errorMessage: 'Failed to create music',
+      });
+      return response as Audio;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to create music');
+      return rejectWithValue(error || 'Failed to create music');
     }
   }
 );
+
+interface UpdateMusicParams {
+  id: string;
+  data: Partial<Audio>;
+  token: string | null;
+}
 
 export const updateMusic = createAsyncThunk<
   Audio,
-  { id: string; data: Partial<Audio> },
+  UpdateMusicParams,
   { rejectValue: string }
 >(
   'adminMusic/updateMusic',
-  async ({ id, data }, { rejectWithValue }) => {
+  async ({ id, data, token }, { rejectWithValue }) => {
     try {
-      const response = await adminApiClient.put(`/music/${id}`, data);
-      return response;
+      const response = await makeRequest('put', `/music/${id}`, {
+        data,
+        token,
+        successMessage: 'Music updated successfully!',
+        errorMessage: 'Failed to update music',
+      });
+      return response as Audio;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to update music');
+      return rejectWithValue(error || 'Failed to update music');
     }
   }
 );
 
+interface DeleteMusicParams {
+  id: string;
+  token: string | null;
+}
+
 export const deleteMusic = createAsyncThunk<
   string,
-  string,
+  DeleteMusicParams,
   { rejectValue: string }
 >(
   'adminMusic/deleteMusic',
-  async (id, { rejectWithValue }) => {
+  async ({ id, token }, { rejectWithValue }) => {
     try {
-      await adminApiClient.delete(`/music/${id}`);
+      await makeRequest('delete', `/music/${id}`, {
+        token,
+        successMessage: 'Music deleted successfully!',
+        errorMessage: 'Failed to delete music',
+      });
       return id;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to delete music');
+      return rejectWithValue(error || 'Failed to delete music');
     }
   }
 );

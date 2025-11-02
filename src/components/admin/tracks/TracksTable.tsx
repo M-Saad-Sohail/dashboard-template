@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import BadgeStatus from '@/components/ui/badge/BadgeStatus';
-import { Audio } from '@/lib/admin-api-client';
+import { Audio } from '@/types/album';
 import { PlayIcon, PencilIcon, TrashIcon, CheckIcon } from '@/icons';
 
 // Extend Audio interface to include optional createdAt field

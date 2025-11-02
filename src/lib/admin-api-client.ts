@@ -1,36 +1,3 @@
-import axios from 'axios';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://api2.myrenewme.com/api';
-
-export const adminApiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token interceptor
-adminApiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Response interceptor for error handling
-adminApiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    // if (error.response?.status === 401) {
-    //   // Redirect to login
-    //   window.location.href = '/auth/signin';
-    // }
-    return Promise.reject(error);
-  }
-);
-
-// Common interfaces matching backend API responses
 export interface Audio {
   id?: string;
   title: string;

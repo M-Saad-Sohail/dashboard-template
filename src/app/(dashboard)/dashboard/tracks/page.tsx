@@ -30,7 +30,7 @@ import {
   clearSelectedTracks,
 } from '@/_core/features/adminTracksSlice';
 import { fetchAdminAlbums } from '@/_core/features/adminAlbumsSlice';
-import type { Audio } from '@/lib/admin-api-client';
+import type { Audio } from '@/types/album';
 import { PlusIcon } from '@/icons';
 
 const TracksPage = () => {

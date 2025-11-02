@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AudioAlbum } from '@/lib/admin-api-client';
+import { AudioAlbum } from '@/types/album';
 import BadgeStatus from '@/components/ui/badge/BadgeStatus';
 import { PencilIcon, TrashIcon } from '@/icons';
 

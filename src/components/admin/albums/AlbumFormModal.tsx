@@ -6,7 +6,7 @@ import ButtonAction from '@/components/ui/button/ButtonAction';
 import InputField from '@/components/form/input/InputField';
 import TextArea from '@/components/form/input/TextArea';
 import Switch from '@/components/form/switch/Switch';
-import { AudioAlbum } from '@/lib/admin-api-client';
+import { AudioAlbum } from '@/types/album';
 
 interface AlbumFormModalProps {
   isOpen: boolean;

@@ -4,7 +4,7 @@ import React from 'react';
 import Modal from '@/components/ui/modal';
 import ButtonAction from '@/components/ui/button/ButtonAction';
 import AlertMessage from '@/components/ui/alert/AlertMessage';
-import { AudioAlbum } from '@/lib/admin-api-client';
+import { AudioAlbum } from '@/types/album';
 
 interface DeleteAlbumModalProps {
   isOpen: boolean;

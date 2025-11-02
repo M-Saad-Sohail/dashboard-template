@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { adminApiClient, Audio, PaginationMetadata } from '@/lib/admin-api-client';
+import { Audio, PaginationMetadata } from '@/types/album';
+import makeRequest from '@/lib/axios-client';
 import { RootState } from '../store/store';
 
 interface AdminTracksState {
@@ -41,12 +42,12 @@ const mockTracks: Audio[] = [
     albumId: '1',
     sections: ['RenewMe'],
     position: 1,
-    createdAt: new Date().toISOString(),
+    createdAt: '2024-01-01T00:00:00.000Z',
   },
   {
     id: '2',
     title: 'Sleep Soundscapes',
-    preview: null,
+    preview: undefined,
     track: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
     artist: 'Sleep Expert',
     released: true,
@@ -59,7 +60,7 @@ const mockTracks: Audio[] = [
     albumId: '2',
     sections: ['RenewMe', 'Premium'],
     position: 1,
-    createdAt: new Date().toISOString(),
+    createdAt: '2024-01-02T00:00:00.000Z',
   },
   {
     id: '3',
@@ -74,7 +75,7 @@ const mockTracks: Audio[] = [
     albumId: undefined,
     sections: ['RenewMe'],
     position: 1,
-    createdAt: new Date().toISOString(),
+    createdAt: '2024-01-03T00:00:00.000Z',
   },
 ];
 
@@ -109,13 +110,14 @@ const initialState: AdminTracksState = {
 // Async Thunks
 export const fetchAdminTracks = createAsyncThunk<
   { collection: Audio[]; metadata: PaginationMetadata },
-  void,
+  { token: string | null },
   { rejectValue: string; state: RootState }
 >(
   'adminTracks/fetchTracks',
-  async (_, { rejectWithValue, getState }) => {
+  async ({ token }, { rejectWithValue, getState }) => {
+    const { filters } = getState().adminTracks;
+    
     try {
-      const { filters } = getState().adminTracks;
       const params = new URLSearchParams({
         section: filters.section,
         groupBy: filters.groupBy,
@@ -133,7 +135,10 @@ export const fetchAdminTracks = createAsyncThunk<
         params.append('premium', filters.premium);
       }
       
-      const response = await adminApiClient.get(`/tracks?${params}`);
+      const response = await makeRequest('get', `/tracks?${params}`, {
+        token,
+        errorMessage: 'Failed to fetch tracks',
+      });
       
       return {
         collection: response.collection || [],
@@ -141,7 +146,7 @@ export const fetchAdminTracks = createAsyncThunk<
       };
     } catch (error: any) {
       // Return mock data as fallback for testing
-      console.warn('API call failed, using mock data:', error?.message);
+      console.warn('API call failed, using mock data:', error);
       return {
         collection: mockTracks.filter(t => {
           const matchesSearch = filters.search ? t.title.toLowerCase().includes(filters.search.toLowerCase()) : true;
@@ -155,82 +160,133 @@ export const fetchAdminTracks = createAsyncThunk<
   }
 );
 
+interface CreateTrackParams {
+  trackData: Omit<Audio, 'id'>;
+  token: string | null;
+}
+
 export const createTrack = createAsyncThunk<
   Audio,
-  Omit<Audio, 'id'>,
+  CreateTrackParams,
   { rejectValue: string }
 >(
   'adminTracks/createTrack',
-  async (trackData, { rejectWithValue }) => {
+  async ({ trackData, token }, { rejectWithValue }) => {
     try {
-      const response = await adminApiClient.post('/tracks', trackData);
-      return response;
+      const response = await makeRequest('post', '/tracks', {
+        data: trackData,
+        token,
+        successMessage: 'Track created successfully!',
+        errorMessage: 'Failed to create track',
+      });
+      return response as Audio;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to create track');
+      return rejectWithValue(error || 'Failed to create track');
     }
   }
 );
+
+interface UpdateTrackParams {
+  id: string;
+  data: Partial<Audio>;
+  token: string | null;
+}
 
 export const updateTrack = createAsyncThunk<
   Audio,
-  { id: string; data: Partial<Audio> },
+  UpdateTrackParams,
   { rejectValue: string }
 >(
   'adminTracks/updateTrack',
-  async ({ id, data }, { rejectWithValue }) => {
+  async ({ id, data, token }, { rejectWithValue }) => {
     try {
-      const response = await adminApiClient.put(`/tracks/${id}`, data);
-      return response;
+      const response = await makeRequest('put', `/tracks/${id}`, {
+        data,
+        token,
+        successMessage: 'Track updated successfully!',
+        errorMessage: 'Failed to update track',
+      });
+      return response as Audio;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to update track');
+      return rejectWithValue(error || 'Failed to update track');
     }
   }
 );
+
+interface DeleteTrackParams {
+  id: string;
+  token: string | null;
+}
 
 export const deleteTrack = createAsyncThunk<
   string,
-  string,
+  DeleteTrackParams,
   { rejectValue: string }
 >(
   'adminTracks/deleteTrack',
-  async (id, { rejectWithValue }) => {
+  async ({ id, token }, { rejectWithValue }) => {
     try {
-      await adminApiClient.delete(`/tracks/${id}`);
+      await makeRequest('delete', `/tracks/${id}`, {
+        token,
+        successMessage: 'Track deleted successfully!',
+        errorMessage: 'Failed to delete track',
+      });
       return id;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to delete track');
+      return rejectWithValue(error || 'Failed to delete track');
     }
   }
 );
+
+interface BulkDeleteTracksParams {
+  trackIds: string[];
+  token: string | null;
+}
 
 export const bulkDeleteTracks = createAsyncThunk<
   string[],
-  string[],
+  BulkDeleteTracksParams,
   { rejectValue: string }
 >(
   'adminTracks/bulkDeleteTracks',
-  async (trackIds, { rejectWithValue }) => {
+  async ({ trackIds, token }, { rejectWithValue }) => {
     try {
-      await adminApiClient.post('/tracks/bulk-delete', { ids: trackIds });
+      await makeRequest('post', '/tracks/bulk-delete', {
+        data: { ids: trackIds },
+        token,
+        successMessage: `${trackIds.length} tracks deleted successfully!`,
+        errorMessage: 'Failed to delete tracks',
+      });
       return trackIds;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to delete tracks');
+      return rejectWithValue(error || 'Failed to delete tracks');
     }
   }
 );
 
+interface BulkUpdateTracksParams {
+  ids: string[];
+  updates: Partial<Audio>;
+  token: string | null;
+}
+
 export const bulkUpdateTracks = createAsyncThunk<
   { ids: string[]; updates: Partial<Audio> },
-  { ids: string[]; updates: Partial<Audio> },
+  BulkUpdateTracksParams,
   { rejectValue: string }
 >(
   'adminTracks/bulkUpdateTracks',
-  async ({ ids, updates }, { rejectWithValue }) => {
+  async ({ ids, updates, token }, { rejectWithValue }) => {
     try {
-      await adminApiClient.post('/tracks/bulk-update', { ids, updates });
+      await makeRequest('post', '/tracks/bulk-update', {
+        data: { ids, updates },
+        token,
+        successMessage: `${ids.length} tracks updated successfully!`,
+        errorMessage: 'Failed to update tracks',
+      });
       return { ids, updates };
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || 'Failed to update tracks');
+      return rejectWithValue(error || 'Failed to update tracks');
     }
   }
 );
@@ -343,7 +399,7 @@ const adminTracksSlice = createSlice({
       })
       .addCase(bulkDeleteTracks.fulfilled, (state, action) => {
         state.deleting = false;
-        state.tracks = state.tracks.filter(track => !action.payload.includes(track.id));
+        state.tracks = state.tracks.filter(track => track.id && !action.payload.includes(track.id));
         state.selectedTracks = [];
       })
       .addCase(bulkDeleteTracks.rejected, (state, action) => {
@@ -361,7 +417,7 @@ const adminTracksSlice = createSlice({
         state.updating = false;
         const { ids, updates } = action.payload;
         state.tracks = state.tracks.map(track => 
-          ids.includes(track.id) ? { ...track, ...updates } : track
+          track.id && ids.includes(track.id) ? { ...track, ...updates } : track
         );
         state.selectedTracks = [];
       })

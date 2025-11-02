@@ -23,7 +23,7 @@ import {
   setLimit,
   clearError,
 } from '@/_core/features/adminMusicSlice';
-import type { Audio } from '@/lib/admin-api-client';
+import type { Audio } from '@/types/album';
 import { PlusIcon, MusicIcon } from '@/icons';
 
 const MusicPage = () => {

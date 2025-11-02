@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import BadgeStatus from '@/components/ui/badge/BadgeStatus';
-import { Audio } from '@/lib/admin-api-client';
+import { Audio } from '@/types/album';
 import { PlayIcon, PencilIcon, TrashIcon } from '@/icons';
 
 // Extend Audio interface for music-specific fields

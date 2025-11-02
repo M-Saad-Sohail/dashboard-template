@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'via.placeholder.com',
       },
+      {
+        protocol: 'https',
+        hostname: 's3.us-east-1.amazonaws.com',
+      },
     ],
   },
   webpack(config) {

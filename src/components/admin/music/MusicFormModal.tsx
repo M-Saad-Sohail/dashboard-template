@@ -6,7 +6,7 @@ import ButtonAction from '@/components/ui/button/ButtonAction';
 import InputField from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Switch from '@/components/form/switch/Switch';
-import { Audio } from '@/lib/admin-api-client';
+import { Audio } from '@/types/album';
 
 // Extend Audio interface for music-specific fields
 interface MusicData extends Omit<Audio, 'id'> {

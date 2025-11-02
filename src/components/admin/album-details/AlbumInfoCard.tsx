@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import BadgeStatus from '@/components/ui/badge/BadgeStatus';
 import ButtonAction from '@/components/ui/button/ButtonAction';
-import { AudioAlbum } from '@/lib/admin-api-client';
+import { AudioAlbum } from '@/types/album';
 import { PencilIcon } from '@/icons';
 
 interface AlbumInfoCardProps {
