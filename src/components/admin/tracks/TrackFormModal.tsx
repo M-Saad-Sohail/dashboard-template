@@ -132,7 +132,7 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <InputField
             name="title"
-            defaultValue={formData.title}
+            value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             error={!!errors.title}
             placeholder="Enter track title"
@@ -140,13 +140,13 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
 
           <InputField
             name="artist"
-            defaultValue={formData.artist}
+            value={formData.artist}
             onChange={(e) => setFormData(prev => ({ ...prev, artist: e.target.value }))}
             placeholder="Enter artist name (optional)"
           />
 
           <Select
-            defaultValue={formData.albumId}
+            value={formData.albumId}
             onChange={(value) => setFormData(prev => ({ ...prev, albumId: value }))}
             options={albumOptions}
             placeholder="Select an album (optional)"
@@ -154,7 +154,7 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
 
           <InputField 
             name="track"
-            defaultValue={formData.track}
+            value={formData.track}
             onChange={(e) => setFormData(prev => ({ ...prev, track: e.target.value }))}
             error={!!errors.track}
             placeholder="https://example.com/audio.mp3"
@@ -162,7 +162,7 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
 
           <InputField
             name="preview"
-            defaultValue={formData.preview || ''}
+            value={formData.preview || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, preview: e.target.value }))}
             error={!!errors.preview || formData.preview === null}
             placeholder="https://example.com/preview.mp3"
@@ -175,7 +175,7 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
             <div className="flex items-center gap-2">
               <InputField
                 type="number"
-                defaultValue={durationInput.minutes}
+                value={durationInput.minutes}
                 onChange={(e) => handleDurationChange('minutes', e.target.value)}
                 placeholder="0"
                 min="0"
@@ -184,7 +184,7 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
               <span className="text-black dark:text-white">min</span>
               <InputField
                 type="number"
-                defaultValue={durationInput.seconds}
+                value={durationInput.seconds}
                 onChange={(e) => handleDurationChange('seconds', e.target.value)}
                 placeholder="0"
                 min="0"

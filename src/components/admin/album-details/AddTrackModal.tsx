@@ -71,7 +71,7 @@ const AddTrackModal: React.FC<AddTrackModalProps> = ({
         <div className="mb-6">
           <InputField
             placeholder="Search tracks by title or artist..."
-            defaultValue={searchTerm}
+            value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>

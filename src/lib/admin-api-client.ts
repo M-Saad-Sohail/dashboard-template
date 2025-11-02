@@ -22,10 +22,10 @@ adminApiClient.interceptors.request.use((config) => {
 adminApiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
-      // Redirect to login
-      window.location.href = '/auth/signin';
-    }
+    // if (error.response?.status === 401) {
+    //   // Redirect to login
+    //   window.location.href = '/auth/signin';
+    // }
     return Promise.reject(error);
   }
 );

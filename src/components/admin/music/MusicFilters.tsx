@@ -47,7 +47,7 @@ const MusicFilters: React.FC<MusicFiltersProps> = ({ filters, onApplyFilters }) 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-end">
         <Select
           options={sectionOptions}
-          defaultValue={localFilters.section}
+          value={localFilters.section}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, section: value }))}
         />
 
@@ -55,7 +55,7 @@ const MusicFilters: React.FC<MusicFiltersProps> = ({ filters, onApplyFilters }) 
           name="search"
           type="text"
           placeholder="Search by title or artist..."
-          defaultValue={localFilters.search}
+          value={localFilters.search}
           onChange={(e) => setLocalFilters(prev => ({ ...prev, search: e.target.value }))}
         />
 

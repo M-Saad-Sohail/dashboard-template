@@ -4,11 +4,83 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
+import { signupUser, clearError } from "@/_core/features/authSlice";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    password: "",
+  });
+
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, router]);
+
+  // Show error toast
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validation
+    if (!formData.first_name || !formData.last_name || !formData.email || !formData.password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
+    if (!isChecked) {
+      toast.error("Please accept the Terms and Conditions");
+      return;
+    }
+
+    try {
+      const result = await dispatch(signupUser(formData)).unwrap();
+      toast.success("Account created successfully!");
+      router.push("/dashboard");
+    } catch (error: any) {
+      // Error is already handled by Redux state and useEffect
+      console.error("Signup error:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -83,7 +155,7 @@ export default function SignUpForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {/* <!-- First Name --> */}
@@ -93,9 +165,11 @@ export default function SignUpForm() {
                     </Label>
                     <Input
                       type="text"
-                      id="fname"
-                      name="fname"
+                      name="first_name"
                       placeholder="Enter your first name"
+                      value={formData.first_name}
+                      onChange={handleChange}
+                      disabled={loading}
                     />
                   </div>
                   {/* <!-- Last Name --> */}
@@ -105,9 +179,11 @@ export default function SignUpForm() {
                     </Label>
                     <Input
                       type="text"
-                      id="lname"
-                      name="lname"
+                      name="last_name"
                       placeholder="Enter your last name"
+                      value={formData.last_name}
+                      onChange={handleChange}
+                      disabled={loading}
                     />
                   </div>
                 </div>
@@ -118,9 +194,11 @@ export default function SignUpForm() {
                   </Label>
                   <Input
                     type="email"
-                    id="email"
                     name="email"
                     placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
                 {/* <!-- Password --> */}
@@ -130,8 +208,12 @@ export default function SignUpForm() {
                   </Label>
                   <div className="relative">
                     <Input
+                      name="password"
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleChange}
+                      disabled={loading}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -165,8 +247,12 @@ export default function SignUpForm() {
                 </div>
                 {/* <!-- Button --> */}
                 <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Sign Up
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Creating account..." : "Sign Up"}
                   </button>
                 </div>
               </div>

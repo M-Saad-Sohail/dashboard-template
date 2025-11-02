@@ -74,13 +74,13 @@ const TrackFilters: React.FC<TrackFiltersProps> = ({ filters, onApplyFilters }) 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 items-end">
         <Select
           options={sectionOptions}
-          defaultValue={localFilters.section}
+          value={localFilters.section}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, section: value }))}
         />
 
         <Select
           options={groupByOptions}
-          defaultValue={localFilters.groupBy}
+          value={localFilters.groupBy}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, groupBy: value }))}
         />
 
@@ -88,18 +88,18 @@ const TrackFilters: React.FC<TrackFiltersProps> = ({ filters, onApplyFilters }) 
           name="search"
           type="text"
           placeholder="Search by title or artist..."
-          defaultValue={localFilters.search}
+          value={localFilters.search}
           onChange={(e) => setLocalFilters(prev => ({ ...prev, search: e.target.value }))}
         />
 
         <Select
-          defaultValue={localFilters.released}
+          value={localFilters.released}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, released: value }))}
           options={releasedOptions}
         />
 
         <Select
-          defaultValue={localFilters.premium}
+          value={localFilters.premium}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, premium: value }))}
           options={premiumOptions}
         />

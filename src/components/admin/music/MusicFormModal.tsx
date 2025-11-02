@@ -158,7 +158,7 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <InputField
             name="title"
-            defaultValue={formData.title}
+            value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             error={!!errors.title}
             placeholder="Enter music title"
@@ -166,21 +166,21 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
 
           <InputField
             name="artist"
-            defaultValue={formData.artist || ''}
+            value={formData.artist || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, artist: e.target.value }))}
             placeholder="Enter artist name"
           />
 
           <InputField
             name="album"
-            defaultValue={(formData as any).album || ''}
+            value={(formData as any).album || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, album: { title: e.target.value } } as any))}
             placeholder="Enter album name (optional)"
           />
 
           <InputField
             name="track"
-            defaultValue={formData.track}
+            value={formData.track}
             onChange={(e) => setFormData(prev => ({ ...prev, track: e.target.value }))}
             error={!!errors.track}
             placeholder="https://example.com/music.mp3"
@@ -188,14 +188,14 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
 
           <InputField
             name="coverPortrait"
-            defaultValue={formData.coverPortrait || ''}
+            value={formData.coverPortrait || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, coverPortrait: e.target.value }))}
             error={!!errors.coverPortrait}
             placeholder="https://example.com/cover.jpg"
           />
 
           <Select
-            defaultValue={formData.genre || ''}
+            value={formData.genre || ''}
             onChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}
             options={genreOptions}
           />
@@ -207,7 +207,7 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
             <div className="flex items-center gap-2">
               <InputField
                 type="number"
-                defaultValue={durationInput.minutes}
+                value={durationInput.minutes}
                 onChange={(e) => handleDurationChange('minutes', e.target.value)}
                 placeholder="0"
                 min="0"
@@ -216,7 +216,7 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
               <span className="text-black dark:text-white">min</span>
               <InputField
                 type="number"
-                defaultValue={durationInput.seconds}
+                value={durationInput.seconds}
                 onChange={(e) => handleDurationChange('seconds', e.target.value)}
                 placeholder="0"
                 min="0"
