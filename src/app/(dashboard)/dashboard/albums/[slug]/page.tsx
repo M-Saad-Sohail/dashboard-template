@@ -37,6 +37,7 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
   );
   const { tracks: allTracks } = useAppSelector((state) => state.adminTracks);
   const { updating: updatingAlbum } = useAppSelector((state) => state.adminAlbums);
+  const { authToken } = useAppSelector((state) => state.auth);
 
   const [isAddTrackModalOpen, setIsAddTrackModalOpen] = useState(false);
   const [isEditAlbumModalOpen, setIsEditAlbumModalOpen] = useState(false);
@@ -44,10 +45,10 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    dispatch(fetchAlbumBySlug(slug));
-    dispatch(fetchAllAlbumsForDropdown());
-    dispatch(fetchAdminTracks());
-  }, [dispatch, slug]);
+    dispatch(fetchAlbumBySlug({ slug, token: authToken }));
+    dispatch(fetchAllAlbumsForDropdown({ token: authToken }));
+    dispatch(fetchAdminTracks({ token: authToken }));
+  }, [dispatch, slug, authToken]);
 
   const handleAlbumChange = (newSlug: string) => {
     router.push(`/dashboard/albums/${newSlug}`);
@@ -56,19 +57,19 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
   const handleAddTracks = async (trackIds: string[]) => {
     if (album?.id) {
       for (const trackId of trackIds) {
-        await dispatch(addTrackToAlbum({ albumId: album.id, trackId }));
+        await dispatch(addTrackToAlbum({ albumId: album.id, trackId, token: authToken }));
       }
       setIsAddTrackModalOpen(false);
       setSuccessMessage(`Added ${trackIds.length} track(s) to album!`);
       setTimeout(() => setSuccessMessage(null), 3000);
       // Refresh album data
-      dispatch(fetchAlbumBySlug(slug));
+      dispatch(fetchAlbumBySlug({ slug, token: authToken }));
     }
   };
 
   const handleRemoveTrack = async (track: Audio) => {
     if (album?.id && window.confirm(`Remove "${track.title}" from this album?`)) {
-      const result = await dispatch(removeTrackFromAlbum({ albumId: album.id, trackId: track.id || '' }));
+      const result = await dispatch(removeTrackFromAlbum({ albumId: album.id, trackId: track.id || '', token: authToken }));
       if (removeTrackFromAlbum.fulfilled.match(result)) {
         setSuccessMessage('Track removed from album!');
         setTimeout(() => setSuccessMessage(null), 3000);
@@ -99,13 +100,13 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
 
   const handleUpdateAlbum = async (albumData: Omit<AudioAlbum, 'id'>) => {
     if (album?.id) {
-      const result = await dispatch(updateAlbum({ id: album.id, data: albumData }));
+      const result = await dispatch(updateAlbum({ id: album.id, data: albumData, token: authToken }));
       if (updateAlbum.fulfilled.match(result)) {
         setIsEditAlbumModalOpen(false);
         setSuccessMessage('Album updated successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
         // Refresh album data
-        dispatch(fetchAlbumBySlug(slug));
+        dispatch(fetchAlbumBySlug({ slug, token: authToken }));
       }
     }
   };

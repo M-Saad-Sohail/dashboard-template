@@ -53,7 +53,7 @@ const TracksTable: React.FC<TracksTableProps> = ({
     if (playingTrackId === track.id) {
       setPlayingTrackId(null);
     } else {
-      setPlayingTrackId(track.id);
+      setPlayingTrackId(track.id || null);
       onPlay(track);
     }
   };
@@ -204,7 +204,7 @@ const TracksTable: React.FC<TracksTableProps> = ({
       selectable={showBulkActions}
       selectedRows={selectedTracks}
       onRowSelectionChange={handleRowSelectionChange}
-      getRowId={(row) => row.id}
+      getRowId={(row) => row.id || ''}
     />
   );
 };

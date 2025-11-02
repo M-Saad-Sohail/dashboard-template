@@ -51,6 +51,7 @@ const TracksPage = () => {
     selectedTracks,
   } = useAppSelector((state) => state.adminTracks);
   const { albums } = useAppSelector((state) => state.adminAlbums);
+  const { authToken } = useAppSelector((state) => state.auth);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -60,9 +61,9 @@ const TracksPage = () => {
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
 
   useEffect(() => {
-    dispatch(fetchAdminTracks());
-    dispatch(fetchAdminAlbums());
-  }, [dispatch, filters]);
+    dispatch(fetchAdminTracks({ token: authToken }));
+    dispatch(fetchAdminAlbums({ token: authToken }));
+  }, [dispatch, filters, authToken]);
 
   // Handle edit parameter from URL
   useEffect(() => {
@@ -79,7 +80,7 @@ const TracksPage = () => {
   };
 
   const handleCreateTrack = async (trackData: Omit<Audio, 'id'>) => {
-    const result = await dispatch(createTrack(trackData));
+    const result = await dispatch(createTrack({ trackData, token: authToken }));
     if (createTrack.fulfilled.match(result)) {
       setIsCreateModalOpen(false);
       setSuccessMessage('Track created successfully!');
@@ -89,7 +90,7 @@ const TracksPage = () => {
 
   const handleUpdateTrack = async (trackData: Omit<Audio, 'id'>) => {
     if (currentTrack?.id) {
-      const result = await dispatch(updateTrack({ id: currentTrack.id, data: trackData }));
+      const result = await dispatch(updateTrack({ id: currentTrack.id, data: trackData, token: authToken }));
       if (updateTrack.fulfilled.match(result)) {
         setIsEditModalOpen(false);
         setSuccessMessage('Track updated successfully!');
@@ -100,7 +101,7 @@ const TracksPage = () => {
 
   const handleDeleteTrack = async () => {
     if (currentTrack?.id) {
-      const result = await dispatch(deleteTrack(currentTrack.id));
+      const result = await dispatch(deleteTrack({ id: currentTrack.id, token: authToken }));
       if (deleteTrack.fulfilled.match(result)) {
         setIsDeleteModalOpen(false);
         setSuccessMessage('Track deleted successfully!');
@@ -111,7 +112,7 @@ const TracksPage = () => {
 
   const handleBulkDelete = async () => {
     if (selectedTracks.length > 0 && window.confirm(`Delete ${selectedTracks.length} selected tracks?`)) {
-      const result = await dispatch(bulkDeleteTracks(selectedTracks));
+      const result = await dispatch(bulkDeleteTracks({ trackIds: selectedTracks, token: authToken }));
       if (bulkDeleteTracks.fulfilled.match(result)) {
         setSuccessMessage(`${selectedTracks.length} tracks deleted successfully!`);
         setTimeout(() => setSuccessMessage(null), 3000);
@@ -123,7 +124,8 @@ const TracksPage = () => {
     if (selectedTracks.length > 0) {
       const result = await dispatch(bulkUpdateTracks({ 
         ids: selectedTracks, 
-        updates: { released: true } 
+        updates: { released: true },
+        token: authToken 
       }));
       if (bulkUpdateTracks.fulfilled.match(result)) {
         setSuccessMessage(`${selectedTracks.length} tracks marked as released!`);
@@ -136,7 +138,8 @@ const TracksPage = () => {
     if (selectedTracks.length > 0) {
       const result = await dispatch(bulkUpdateTracks({ 
         ids: selectedTracks, 
-        updates: { premium: true } 
+        updates: { premium: true },
+        token: authToken 
       }));
       if (bulkUpdateTracks.fulfilled.match(result)) {
         setSuccessMessage(`${selectedTracks.length} tracks marked as premium!`);

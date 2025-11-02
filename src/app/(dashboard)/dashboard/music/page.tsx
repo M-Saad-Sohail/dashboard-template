@@ -39,6 +39,7 @@ const MusicPage = () => {
     metadata,
     filters,
   } = useAppSelector((state) => state.adminMusic);
+  const { authToken } = useAppSelector((state) => state.auth);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -48,15 +49,15 @@ const MusicPage = () => {
   const [playingMusicId, setPlayingMusicId] = useState<string | null>(null);
 
   useEffect(() => {
-    dispatch(fetchAdminMusic());
-  }, [dispatch, filters]);
+    dispatch(fetchAdminMusic({ token: authToken }));
+  }, [dispatch, filters, authToken]);
 
   const handleApplyFilters = (newFilters: { section: string; search: string }) => {
     dispatch(setFilters({ ...newFilters, page: 1 }));
   };
 
   const handleCreateMusic = async (musicData: Omit<Audio, 'id'>) => {
-    const result = await dispatch(createMusic(musicData));
+    const result = await dispatch(createMusic({ musicData, token: authToken }));
     if (createMusic.fulfilled.match(result)) {
       setIsCreateModalOpen(false);
       setSuccessMessage('Music uploaded successfully!');
@@ -66,7 +67,7 @@ const MusicPage = () => {
 
   const handleUpdateMusic = async (musicData: Omit<Audio, 'id'>) => {
     if (currentMusic?.id) {
-      const result = await dispatch(updateMusic({ id: currentMusic.id, data: musicData }));
+      const result = await dispatch(updateMusic({ id: currentMusic.id, data: musicData, token: authToken }));
       if (updateMusic.fulfilled.match(result)) {
         setIsEditModalOpen(false);
         setSuccessMessage('Music updated successfully!');
@@ -77,7 +78,7 @@ const MusicPage = () => {
 
   const handleDeleteMusic = async () => {
     if (currentMusic?.id) {
-      const result = await dispatch(deleteMusic(currentMusic.id));
+      const result = await dispatch(deleteMusic({ id: currentMusic.id, token: authToken }));
       if (deleteMusic.fulfilled.match(result)) {
         setIsDeleteModalOpen(false);
         setSuccessMessage('Music deleted successfully!');
