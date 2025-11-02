@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import PageBreadCrumb from '@/components/common/PageBreadCrumb';
@@ -18,23 +18,24 @@ import {
   removeTrackFromAlbum,
   clearError,
 } from '@/_core/features/adminAlbumDetailsSlice';
-import { updateAlbum } from '@/_core/features/adminAlbumsSlice';
+import { fetchAdminAlbums, updateAlbum } from '@/_core/features/adminAlbumsSlice';
 import { fetchAdminTracks } from '@/_core/features/adminTracksSlice';
 import type { Audio, AudioAlbum } from '@/types/album';
 import { PlusIcon } from '@/icons';
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 const AlbumDetailsPage = ({ params }: PageProps) => {
-  const { slug } = params;
+  const { slug } = use(params);
   const router = useRouter();
   const dispatch = useAppDispatch();
-  
+
   const { album, tracks, allAlbums, loading, updating, error } = useAppSelector(
     (state) => state.adminAlbumDetails
   );
+  const { albums } = useAppSelector((state) => state.adminAlbums);
   const { tracks: allTracks } = useAppSelector((state) => state.adminTracks);
   const { updating: updatingAlbum } = useAppSelector((state) => state.adminAlbums);
   const { authToken } = useAppSelector((state) => state.auth);
@@ -46,7 +47,8 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
 
   useEffect(() => {
     dispatch(fetchAlbumBySlug({ slug, token: authToken }));
-    dispatch(fetchAllAlbumsForDropdown({ token: authToken }));
+    // dispatch(fetchAllAlbumsForDropdown({ token: authToken }));
+    dispatch(fetchAdminAlbums({ token: authToken }));
     dispatch(fetchAdminTracks({ token: authToken }));
   }, [dispatch, slug, authToken]);
 
@@ -91,7 +93,7 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
       const audio = new Audio(track.preview);
       audio.play();
       setCurrentAudio(audio);
-      
+
       audio.addEventListener('ended', () => {
         setCurrentAudio(null);
       });
@@ -121,7 +123,7 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
         {/* Header with Album Selector */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <AlbumSelector
-            albums={allAlbums}
+            albums={albums}
             currentAlbumSlug={slug}
             onAlbumChange={handleAlbumChange}
             loading={loading}
@@ -139,15 +141,15 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
 
         {/* Success/Error Messages */}
         {successMessage && (
-          <AlertMessage 
-            type="success" 
+          <AlertMessage
+            type="success"
             message={successMessage}
             onClose={() => setSuccessMessage(null)}
           />
         )}
         {error && (
-          <AlertMessage 
-            type="error" 
+          <AlertMessage
+            type="error"
             message={error}
             onClose={() => dispatch(clearError())}
           />

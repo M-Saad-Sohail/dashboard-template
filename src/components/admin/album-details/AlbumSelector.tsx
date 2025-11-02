@@ -25,12 +25,9 @@ const AlbumSelector: React.FC<AlbumSelectorProps> = ({
   return (
     <div className="w-full md:w-64">
       <Select
-        label="Select Album"
-        value={currentAlbumSlug}
+        defaultValue={currentAlbumSlug}
         onChange={onAlbumChange}
         options={options}
-        disabled={loading}
-        placeholder="Choose an album..."
       />
     </div>
   );
