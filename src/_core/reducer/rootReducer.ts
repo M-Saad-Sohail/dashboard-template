@@ -2,9 +2,17 @@ import { combineReducers } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import authReducer from "../features/authSlice";
+import adminAlbumsReducer from '../features/adminAlbumsSlice';
+import adminTracksReducer from '../features/adminTracksSlice';
+import adminMusicReducer from '../features/adminMusicSlice';
+import adminAlbumDetailsReducer from '../features/adminAlbumDetailsSlice';
 
 const appReducer = combineReducers({
   auth: authReducer,
+  adminAlbums: adminAlbumsReducer,
+  adminTracks: adminTracksReducer,
+  adminMusic: adminMusicReducer,
+  adminAlbumDetails: adminAlbumDetailsReducer,
 });
 
 // Root reducer with optional global reset behavior

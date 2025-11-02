@@ -10,14 +10,14 @@ interface ModalProps {
   isFullscreen?: boolean; // Default to false for backwards compatibility
 }
 
-export const Modal: React.FC<ModalProps> = ({
+export default function Modal({
   isOpen,
   onClose,
   children,
   className,
   showCloseButton = true, // Default to true for backwards compatibility
   isFullscreen = false,
-}) => {
+}: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -92,4 +92,4 @@ export const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
-};
+}

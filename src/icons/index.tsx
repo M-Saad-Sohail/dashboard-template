@@ -51,6 +51,8 @@ import HorizontaLDots from "./horizontal-dots.svg";
 import ChatIcon from "./chat.svg";
 import MoreDotIcon from "./more-dot.svg";
 import BellIcon from "./bell.svg";
+import PlayIcon from "./PlayIcon";
+import PauseIcon from "./PauseIcon";
 
 export {
   DownloadIcon,
@@ -106,4 +108,10 @@ export {
   HorizontaLDots,
   ChevronUpIcon,
   ChatIcon,
+  PlayIcon,
+  PauseIcon,
+  // Aliases for commonly used icons
+  AudioIcon as MusicIcon,
+  TrashBinIcon as TrashIcon,
+  CheckLineIcon as CheckIcon,
 };

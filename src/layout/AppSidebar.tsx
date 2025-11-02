@@ -9,6 +9,9 @@ import {
   GridIcon,
   HorizontaLDots,
   UserCircleIcon,
+  FolderIcon,
+  MusicIcon,
+  FileIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
 
@@ -24,6 +27,21 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Dashboard",
     path: "/dashboard",
+  },
+  {
+    icon: <FolderIcon />,
+    name: "Albums",
+    path: "/dashboard/albums",
+  },
+  {
+    icon: <FileIcon />,
+    name: "Tracks",
+    path: "/dashboard/tracks",
+  },
+  {
+    icon: <MusicIcon />,
+    name: "Music",
+    path: "/dashboard/music",
   },
   {
     icon: <UserCircleIcon />,
