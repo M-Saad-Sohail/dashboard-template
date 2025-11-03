@@ -97,7 +97,7 @@ const initialState: AdminTracksState = {
   metadata: mockMetadata,
   filters: {
     section: 'RenewMe',
-    groupBy: 'None',
+    groupBy: 'Sleep',
     search: '',
     released: 'all',
     premium: 'all',
@@ -166,6 +166,7 @@ interface CreateTrackParams {
     previewFile?: File;
   };
   albumSlug?: string; // If provided, create track within album
+  groupBy?: string; // Group for standalone tracks
   token: string | null;
 }
 
@@ -175,7 +176,7 @@ export const createTrack = createAsyncThunk<
   { rejectValue: string }
 >(
   'adminTracks/createTrack',
-  async ({ trackData, albumSlug, token }, { rejectWithValue }) => {
+  async ({ trackData, albumSlug, groupBy, token }, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       
@@ -200,7 +201,11 @@ export const createTrack = createAsyncThunk<
       // Add numbers as strings
       formData.append('position', (trackData.position || 1).toString());
       if ((trackData as any).preview_duration) formData.append('preview_duration', (trackData as any).preview_duration.toString());
-      if ((trackData as any).categoryId) formData.append('category_id', (trackData as any).categoryId.toString());
+      
+      // Add group if provided (for standalone tracks)
+      if (groupBy && !albumSlug) {
+        formData.append('groupBy', groupBy);
+      }
       
       // Add album ID if not creating within an album
       if (!albumSlug && trackData.albumId) {
@@ -221,6 +226,9 @@ export const createTrack = createAsyncThunk<
       const response = await makeRequest('post', endpoint, {
         data: formData,
         token,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
         successMessage: 'Track created successfully!',
         errorMessage: 'Failed to create track',
       });

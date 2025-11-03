@@ -4,38 +4,36 @@ import React, { useState, useEffect } from 'react';
 import Modal from '@/components/ui/modal';
 import ButtonAction from '@/components/ui/button/ButtonAction';
 import InputField from '@/components/form/input/InputField';
-import Select from '@/components/form/Select';
 import Switch from '@/components/form/switch/Switch';
 import FileUploadField from '@/components/form/input/FileUploadField';
 import type { Audio, AudioAlbum } from '@/types/album';
-import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 
-interface TrackFormModalProps {
+interface AlbumTrackFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: Omit<Audio, 'id'> & {
     trackFile?: File;
     previewFile?: File;
-    groupBy?: string;
+    albumSlug?: string;
   }) => void;
   track?: Audio | null;
+  album?: AudioAlbum | null;
+  albumSlug?: string;
   loading?: boolean;
 }
 
-const TrackFormModal: React.FC<TrackFormModalProps> = ({
+const AlbumTrackFormModal: React.FC<AlbumTrackFormModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
   track,
+  album,
+  albumSlug,
   loading,
 }) => {
-  const dispatch = useAppDispatch();
-  const { authToken } = useAppSelector((state) => state.auth);
-  
   const [formData, setFormData] = useState({
     title: '',
     artist: '',
-    groupBy: 'Sleep',
     track: '',
     duration: 0,
     premium: false,
@@ -74,7 +72,6 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
         sections: track.sections?.join(',') || 'RenewMe',
         subtitle: track.subtitle || '',
         narrator: track.narrator || '',
-        groupBy: 'Sleep', // Default group
       });
       // Set duration input fields from track duration
       const minutes = Math.floor((track.duration || 0) / 60);
@@ -84,7 +81,6 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
       setFormData({
         title: '',
         artist: '',
-        groupBy: 'Sleep',
         track: '',
         duration: 0,
         premium: false,
@@ -99,13 +95,6 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
     setFiles({ track: null, preview: null });
     setErrors({});
   }, [track, isOpen]);
-
-  const groupOptions = [
-    { value: 'Sleep', label: 'Sleep' },
-    { value: 'Confidence', label: 'Confidence' },
-    { value: 'Affirmations', label: 'Affirmations' },
-    { value: 'Meditations', label: 'Meditations' },
-  ];
 
   const handleAudioFileChange = (field: 'track' | 'preview') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -179,7 +168,7 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
       album: null,
       trackFile: files.track || undefined,
       previewFile: files.preview || undefined,
-      groupBy: formData.groupBy,
+      albumSlug: albumSlug,
     });
   };
 
@@ -187,7 +176,7 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="px-6 py-6">
         <h3 className="text-xl font-semibold text-black dark:text-white mb-6">
-          {track ? `Edit Track: ${track.title}` : 'Create Track'}
+          {track ? `Edit Track: ${track.title}` : `Create Track for ${album?.title || 'Album'}`}
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -209,17 +198,21 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
             placeholder="Enter artist name (optional)"
           />
 
-          <div>
-            <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
-              Group <span className="text-meta-1">*</span>
-            </label>
-            <Select
-              defaultValue={formData.groupBy}
-              onChange={(value) => setFormData(prev => ({ ...prev, groupBy: value }))}
-              options={groupOptions}
-              placeholder="Select a group"
-            />
-          </div>
+          <InputField
+            label="Subtitle"
+            name="subtitle"
+            value={formData.subtitle}
+            onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
+            placeholder="Enter subtitle (optional)"
+          />
+
+          <InputField
+            label="Narrator"
+            name="narrator"
+            value={formData.narrator}
+            onChange={(e) => setFormData(prev => ({ ...prev, narrator: e.target.value }))}
+            placeholder="Enter narrator name (optional)"
+          />
 
           <FileUploadField
             label="Track Audio File"
@@ -279,6 +272,15 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
             )}
           </div>
 
+          <InputField
+            label="Sections"
+            name="sections"
+            value={formData.sections}
+            onChange={(e) => setFormData(prev => ({ ...prev, sections: e.target.value }))}
+            placeholder="Enter sections (comma-separated)"
+            helperText="Default: RenewMe"
+          />
+
           <div className="space-y-4">
             <div>
               <Switch
@@ -330,4 +332,4 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
   );
 };
 
-export default TrackFormModal;
+export default AlbumTrackFormModal;

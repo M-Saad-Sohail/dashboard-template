@@ -155,7 +155,7 @@ export function DataTable<T extends Record<string, any>>({
     !isAllCurrentPageSelected;
 
   return (
-    <div className={`space-y-4 ${containerClassName}`}>
+    <div className={`space-y-4 dark:bg-gray-900 ${containerClassName}`}> 
       {searchable && (
         <div className="flex justify-between items-center">
           <input
@@ -163,15 +163,15 @@ export function DataTable<T extends Record<string, any>>({
             placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={handleSearch}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            className="px-4 py-2.5 border border-stroke rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-form-input dark:border-strokedark dark:text-white dark:focus:border-primary placeholder:text-gray-400 dark:placeholder:text-gray-500 dark:bg-gray-900"
           />
         </div>
       )}
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <div className="max-w-full overflow-x-auto">
-          <Table className={className}>
-            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+        <div className="max-w-full overflow-x-auto dark:bg-gray-900">
+          <Table className={`dark:bg-gray-900 ${className}`}>
+            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05] dark:bg-gray-900">
               <TableRow>
                 {selectable && (
                   <TableCell

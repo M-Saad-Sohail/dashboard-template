@@ -36,8 +36,6 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
   music,
   loading,
 }) => {
-  const dispatch = useAppDispatch();
-  const { authToken } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState<MusicData>({
     title: '',
@@ -191,14 +189,24 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
     });
   };
 
+  const handleButtonSubmit = () => {
+    const form = document.querySelector('form');
+    if (form) {
+      form.requestSubmit();
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="px-6 py-6">
-        <h3 className="text-xl font-semibold text-black dark:text-white mb-6">
-          {music ? `Edit Music: ${music.title}` : 'Upload Music'}
-        </h3>
+      <div className="flex flex-col max-h-[90vh]">
+        <div className="px-6 py-4 border-b border-stroke dark:border-strokedark">
+          <h3 className="text-xl font-semibold text-black dark:text-white">
+            {music ? `Edit Music: ${music.title}` : 'Upload Music'}
+          </h3>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="px-6 py-4 overflow-y-auto flex-1">
+          <form onSubmit={handleSubmit} className="space-y-3">
           <InputField
             label="Title"
             name="title"
@@ -285,14 +293,14 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
               <Switch
                 label="Premium Music"
                 defaultChecked={formData.premium}
                 onChange={(checked) => setFormData(prev => ({ ...prev, premium: checked }))}
               />
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                 Mark this music as premium content
               </p>
             </div>
@@ -303,7 +311,7 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
                 defaultChecked={formData.released}
                 onChange={(checked) => setFormData(prev => ({ ...prev, released: checked }))}
               />
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                 Make this music visible to users
               </p>
             </div>
@@ -312,8 +320,11 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
           {errors.submit && (
             <div className="text-red-500 text-sm">{errors.submit}</div>
           )}
+        </form>
+        </div>
 
-          <div className="flex justify-end gap-3 pt-6">
+        <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-2 dark:bg-meta-4">
+          <div className="flex justify-end gap-3">
             <ButtonAction
               type="button"
               variant="secondary"
@@ -323,14 +334,15 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
               Cancel
             </ButtonAction>
             <ButtonAction
-              type="submit"
+              type="button"
               variant="primary"
               loading={loading}
+              onClick={handleButtonSubmit}
             >
               {music ? 'Update Music' : 'Create Music'}
             </ButtonAction>
           </div>
-        </form>
+        </div>
       </div>
     </Modal>
   );

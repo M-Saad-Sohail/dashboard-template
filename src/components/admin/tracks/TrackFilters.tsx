@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import Select from '@/components/form/Select';
 import InputField from '@/components/form/input/InputField';
 import ButtonAction from '@/components/ui/button/ButtonAction';
+import { setFilters } from '@/_core/features/adminTracksSlice';
+import { useAppDispatch } from '@/hooks/useRedux';
 
 interface TrackFiltersProps {
   filters: {
@@ -26,7 +28,7 @@ interface TrackFiltersProps {
 
 const TrackFilters: React.FC<TrackFiltersProps> = ({ filters, onApplyFilters }) => {
   const [localFilters, setLocalFilters] = useState(filters);
-
+  const dispatch = useAppDispatch();
   const handleApply = () => {
     onApplyFilters(localFilters);
   };
@@ -34,7 +36,7 @@ const TrackFilters: React.FC<TrackFiltersProps> = ({ filters, onApplyFilters }) 
   const handleReset = () => {
     const resetFilters = {
       section: 'RenewMe',
-      groupBy: 'None',
+      groupBy: 'Sleep',
       search: '',
       released: 'all',
       premium: 'all',
@@ -50,11 +52,10 @@ const TrackFilters: React.FC<TrackFiltersProps> = ({ filters, onApplyFilters }) 
   ];
 
   const groupByOptions = [
-    { value: 'None', label: 'None' },
-    { value: 'Album', label: 'Album' },
-    { value: 'Artist', label: 'Artist' },
-    { value: 'Category', label: 'Category' },
-    { value: 'Duration', label: 'Duration' },
+    { value: 'Sleep', label: 'Sleep' },
+    { value: 'Confidence', label: 'Boost Confidence' },
+    { value: 'Affirmations', label: 'Affirmations' },
+    { value: 'Meditations', label: 'Meditations' },
   ];
 
   const releasedOptions = [
@@ -70,18 +71,16 @@ const TrackFilters: React.FC<TrackFiltersProps> = ({ filters, onApplyFilters }) 
   ];
 
   return (
-    <div className="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark mb-6">
+    <div className="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark mb-6 dark:bg-gray-900">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 items-end">
         <Select
           options={sectionOptions}
-          value={localFilters.section}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, section: value }))}
         />
 
         <Select
           options={groupByOptions}
-          value={localFilters.groupBy}
-          onChange={(value) => setLocalFilters(prev => ({ ...prev, groupBy: value }))}
+          onChange={(value) => dispatch(setFilters({ groupBy: value }))}
         />
 
         <InputField
@@ -93,13 +92,11 @@ const TrackFilters: React.FC<TrackFiltersProps> = ({ filters, onApplyFilters }) 
         />
 
         <Select
-          value={localFilters.released}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, released: value }))}
           options={releasedOptions}
         />
 
         <Select
-          value={localFilters.premium}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, premium: value }))}
           options={premiumOptions}
         />

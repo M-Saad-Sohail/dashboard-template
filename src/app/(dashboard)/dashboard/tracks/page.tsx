@@ -82,8 +82,14 @@ const TracksPage = () => {
   const handleCreateTrack = async (trackData: Omit<Audio, 'id'> & {
     trackFile?: File;
     previewFile?: File;
+    groupBy?: string;
   }) => {
-    const result = await dispatch(createTrack({ trackData, token: authToken }));
+    const { groupBy, ...restTrackData } = trackData;
+    const result = await dispatch(createTrack({ 
+      trackData: restTrackData, 
+      groupBy: groupBy || undefined,
+      token: authToken 
+    }));
     if (createTrack.fulfilled.match(result)) {
       setIsCreateModalOpen(false);
       setSuccessMessage('Track created successfully!');
@@ -94,9 +100,16 @@ const TracksPage = () => {
   const handleUpdateTrack = async (trackData: Omit<Audio, 'id'> & {
     trackFile?: File;
     previewFile?: File;
+    albumSlug?: string;
   }) => {
     if (currentTrack?.id) {
-      const result = await dispatch(updateTrack({ id: currentTrack.id, data: trackData, token: authToken }));
+      const { albumSlug, ...restTrackData } = trackData;
+      const result = await dispatch(updateTrack({ 
+        id: currentTrack.id, 
+        data: restTrackData, 
+        albumSlug: albumSlug || undefined,
+        token: authToken 
+      }));
       if (updateTrack.fulfilled.match(result)) {
         setIsEditModalOpen(false);
         setSuccessMessage('Track updated successfully!');
@@ -300,7 +313,6 @@ const TracksPage = () => {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onSubmit={handleCreateTrack}
-          albums={albums}
           loading={creating}
         />
 
@@ -312,7 +324,6 @@ const TracksPage = () => {
           }}
           onSubmit={handleUpdateTrack}
           track={currentTrack}
-          albums={albums}
           loading={updating}
         />
 

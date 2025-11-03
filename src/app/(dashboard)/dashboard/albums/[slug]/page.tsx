@@ -11,7 +11,7 @@ import AlbumSelector from '@/components/admin/album-details/AlbumSelector';
 import AlbumTracksTable from '@/components/admin/album-details/AlbumTracksTable';
 import AddTrackModal from '@/components/admin/album-details/AddTrackModal';
 import AlbumFormModal from '@/components/admin/albums/AlbumFormModal';
-import TrackFormModal from '@/components/admin/tracks/TrackFormModal';
+import AlbumTrackFormModal from '@/components/admin/album-details/AlbumTrackFormModal';
 import {
   fetchAlbumBySlug,
   fetchAllAlbumsForDropdown,
@@ -231,11 +231,12 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
           loading={updatingAlbum}
         />
 
-        <TrackFormModal
+        <AlbumTrackFormModal
           isOpen={isCreateTrackModalOpen}
           onClose={() => setIsCreateTrackModalOpen(false)}
           onSubmit={handleCreateTrackInAlbum}
-          albums={[album!].filter(Boolean)}
+          album={album}
+          albumSlug={slug}
           loading={creatingTrack}
         />
       </div>
