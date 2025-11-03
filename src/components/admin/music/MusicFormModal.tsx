@@ -6,19 +6,27 @@ import ButtonAction from '@/components/ui/button/ButtonAction';
 import InputField from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Switch from '@/components/form/switch/Switch';
-import { Audio } from '@/types/album';
+import FileUploadField from '@/components/form/input/FileUploadField';
+import type { Audio } from '@/types/album';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import Image from 'next/image';
 
 // Extend Audio interface for music-specific fields
 interface MusicData extends Omit<Audio, 'id'> {
   genre?: string;
-  coverPortrait?: string;
+  coverArt?: string;
   playCount?: number;
+  sections?: string[];
 }
 
 interface MusicFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: MusicData) => void;
+  onSubmit: (data: MusicData & {
+    trackFile?: File;
+    previewFile?: File;
+    coverArtFile?: File;
+  }) => void;
   music?: Audio | null;
   loading?: boolean;
 }
@@ -30,6 +38,9 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
   music,
   loading,
 }) => {
+  const dispatch = useAppDispatch();
+  const { authToken } = useAppSelector((state) => state.auth);
+  
   const [formData, setFormData] = useState<MusicData>({
     title: '',
     artist: '',
@@ -38,13 +49,34 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
     premium: false,
     released: false,
     genre: '',
-    coverPortrait: '',
+    coverArt: '',
     preview: '',
     album: null,
+    sections: ['RenewMe'],
+  });
+
+  const [files, setFiles] = useState<{
+    track: File | null;
+    coverArt: File | null;
+    preview: File | null;
+  }>({
+    track: null,
+    coverArt: null,
+    preview: null,
+  });
+
+  const [previews, setPreviews] = useState<{
+    coverArt: string | null;
+  }>({
+    coverArt: null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [durationInput, setDurationInput] = useState({ minutes: 0, seconds: 0 });
+  const [audioDurations, setAudioDurations] = useState<{
+    track: number;
+    preview: number;
+  }>({ track: 0, preview: 0 });
 
   useEffect(() => {
     if (music) {
@@ -56,14 +88,18 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
         premium: music.premium || false,
         released: music.released || false,
         genre: (music as any).genre || '',
-        coverPortrait: (music as any).coverPortrait || '',
-        preview: (music as any).preview || '',
-        album: (music as any).album || null,
+        coverArt: (music as any).coverArt || '',
+        preview: music.preview || '',
+        album: music.album || null,
+        sections: music.sections || ['RenewMe'],
       });
       // Convert duration to minutes and seconds
       const minutes = Math.floor(music.duration / 60);
       const seconds = music.duration % 60;
       setDurationInput({ minutes, seconds });
+      setPreviews({
+        coverArt: (music as any).coverArt || null,
+      });
     } else {
       setFormData({
         title: '',
@@ -73,29 +109,69 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
         premium: false,
         released: false,
         genre: '',
-        coverPortrait: '',
+        coverArt: '',
         preview: '',
         album: null,
+        sections: ['RenewMe'],
       });
       setDurationInput({ minutes: 0, seconds: 0 });
+      setPreviews({ coverArt: null });
     }
+    setFiles({ track: null, coverArt: null, preview: null });
     setErrors({});
   }, [music, isOpen]);
 
   const genreOptions = [
     { value: '', label: 'Select Genre' },
-    { value: 'Pop', label: 'Pop' },
-    { value: 'Rock', label: 'Rock' },
-    { value: 'Hip Hop', label: 'Hip Hop' },
-    { value: 'Electronic', label: 'Electronic' },
-    { value: 'Classical', label: 'Classical' },
-    { value: 'Jazz', label: 'Jazz' },
-    { value: 'Country', label: 'Country' },
-    { value: 'R&B', label: 'R&B' },
     { value: 'Ambient', label: 'Ambient' },
+    { value: 'Classical', label: 'Classical' },
+    { value: 'Electronic', label: 'Electronic' },
+    { value: 'Jazz', label: 'Jazz' },
     { value: 'Meditation', label: 'Meditation' },
+    { value: 'Nature', label: 'Nature Sounds' },
+    { value: 'Piano', label: 'Piano' },
+    { value: 'Relaxation', label: 'Relaxation' },
+    { value: 'Spa', label: 'Spa Music' },
+    { value: 'World', label: 'World Music' },
     { value: 'Other', label: 'Other' },
   ];
+
+  const handleAudioFileChange = (field: 'track' | 'preview') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFiles(prev => ({ ...prev, [field]: file }));
+      
+      // Get audio duration
+      const audio = new Audio();
+      audio.onloadedmetadata = () => {
+        const duration = Math.floor(audio.duration);
+        setAudioDurations(prev => ({ ...prev, [field]: duration }));
+        
+        // Auto-set duration if it's the main track
+        if (field === 'track' && duration > 0) {
+          const minutes = Math.floor(duration / 60);
+          const seconds = duration % 60;
+          setDurationInput({ minutes, seconds });
+          setFormData(prev => ({ ...prev, duration }));
+        }
+      };
+      audio.src = URL.createObjectURL(file);
+    }
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFiles(prev => ({ ...prev, coverArt: file }));
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviews({ coverArt: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleDurationChange = (field: 'minutes' | 'seconds', value: string) => {
     const numValue = parseInt(value) || 0;
@@ -114,14 +190,9 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
       newErrors.title = 'Title must be at least 3 characters';
     }
 
-    if (!formData.track) {
-      newErrors.track = 'Audio URL is required';
-    } else if (!isValidUrl(formData.track)) {
-      newErrors.track = 'Please enter a valid URL';
-    }
-
-    if (formData.coverPortrait && !isValidUrl(formData.coverPortrait)) {
-      newErrors.coverPortrait = 'Please enter a valid URL';
+    // Only require track file for new music
+    if (!music && !files.track && !formData.track) {
+      newErrors.track = 'Music file is required';
     }
 
     if (formData.duration === 0) {
@@ -132,20 +203,17 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const isValidUrl = (string: string) => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
-    }
+    if (!validateForm()) return;
+
+    // Submit the music data with files
+    onSubmit({
+      ...formData,
+      trackFile: files.track || undefined,
+      previewFile: files.preview || undefined,
+      coverArtFile: files.coverArt || undefined,
+    });
   };
 
   return (
@@ -157,14 +225,17 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <InputField
+            label="Title"
             name="title"
             value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            error={!!errors.title}
+            error={errors.title}
+            required
             placeholder="Enter music title"
           />
 
           <InputField
+            label="Artist"
             name="artist"
             value={formData.artist || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, artist: e.target.value }))}
@@ -172,77 +243,132 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
           />
 
           <InputField
+            label="Album (Optional)"
             name="album"
-            value={(formData as any).album || ''}
+            value={formData.album?.title || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, album: { title: e.target.value } } as any))}
             placeholder="Enter album name (optional)"
           />
 
-          <InputField
-            name="track"
-            value={formData.track}
-            onChange={(e) => setFormData(prev => ({ ...prev, track: e.target.value }))}
-            error={!!errors.track}
-            placeholder="https://example.com/music.mp3"
-          />
-
-          <InputField
-            name="coverPortrait"
-            value={formData.coverPortrait || ''}
-            onChange={(e) => setFormData(prev => ({ ...prev, coverPortrait: e.target.value }))}
-            error={!!errors.coverPortrait}
-            placeholder="https://example.com/cover.jpg"
-          />
-
-          <Select
-            value={formData.genre || ''}
-            onChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}
-            options={genreOptions}
-          />
-
           <div>
-            <label className="mb-2.5 block font-medium text-black dark:text-white">
-              Duration <span className="text-danger">*</span>
+            <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+              Genre
             </label>
-            <div className="flex items-center gap-2">
-              <InputField
-                type="number"
-                value={durationInput.minutes}
-                onChange={(e) => handleDurationChange('minutes', e.target.value)}
-                placeholder="0"
-                min="0"
-                className="w-20"
+            <Select
+              defaultValue={formData.genre || ''}
+              onChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}
+              options={genreOptions}
+            />
+          </div>
+
+          <FileUploadField
+            label="Music File"
+            name="track"
+            accept="audio/*"
+            onChange={handleAudioFileChange('track')}
+            error={errors.track}
+            helperText={music?.track ? 'Upload new file to replace existing' : 'MP3, WAV, OGG, AAC, or FLAC'}
+            required={!music}
+          />
+          {files.track && audioDurations.track > 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 -mt-2">
+              Duration: {Math.floor(audioDurations.track / 60)}:{(audioDurations.track % 60).toString().padStart(2, '0')}
+            </p>
+          )}
+
+          <FileUploadField
+            label="Preview (Optional)"
+            name="preview"
+            accept="audio/*"
+            onChange={handleAudioFileChange('preview')}
+            helperText="Short preview clip (30-60 seconds)"
+          />
+          {files.preview && audioDurations.preview > 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 -mt-2">
+              Preview Duration: {Math.floor(audioDurations.preview / 60)}:{(audioDurations.preview % 60).toString().padStart(2, '0')}
+            </p>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <FileUploadField
+                label="Cover Art (Optional)"
+                name="coverArt"
+                accept="image/*"
+                onChange={handleImageFileChange}
+                helperText="Album artwork for the music"
               />
-              <span className="text-black dark:text-white">min</span>
-              <InputField
-                type="number"
-                value={durationInput.seconds}
-                onChange={(e) => handleDurationChange('seconds', e.target.value)}
-                placeholder="0"
-                min="0"
-                max="59"
-                className="w-20"
-              />
-              <span className="text-black dark:text-white">sec</span>
+              {previews.coverArt && (
+                <div className="mt-2">
+                  <Image
+                    src={previews.coverArt}
+                    alt="Cover Art Preview"
+                    width={100}
+                    height={100}
+                    className="rounded-lg object-cover"
+                  />
+                </div>
+              )}
             </div>
-            {errors.duration && (
-              <p className="mt-1 text-xs text-danger">{errors.duration}</p>
-            )}
+
+            <div>
+              <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+                Duration <span className="text-meta-1">*</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={durationInput.minutes}
+                  onChange={(e) => handleDurationChange('minutes', e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  className="w-20 rounded border-[1.5px] border-stroke bg-transparent py-2 px-3 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                />
+                <span className="text-black dark:text-white">min</span>
+                <input
+                  type="number"
+                  value={durationInput.seconds}
+                  onChange={(e) => handleDurationChange('seconds', e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  max="59"
+                  className="w-20 rounded border-[1.5px] border-stroke bg-transparent py-2 px-3 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                />
+                <span className="text-black dark:text-white">sec</span>
+              </div>
+              {errors.duration && (
+                <p className="mt-1 text-sm text-meta-1">{errors.duration}</p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4">
-            <Switch
-              label="Premium Music"
-              defaultChecked={formData.premium || false}
-              onChange={(checked) => setFormData(prev => ({ ...prev, premium: checked }))}
-            />
+            <div>
+              <Switch
+                label="Premium Music"
+                defaultChecked={formData.premium}
+                onChange={(checked) => setFormData(prev => ({ ...prev, premium: checked }))}
+              />
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Mark this music as premium content
+              </p>
+            </div>
 
-            <Switch
-              label="Published"
-              defaultChecked={formData.released || false}
-              onChange={(checked) => setFormData(prev => ({ ...prev, released: checked }))}
-            />
+            <div>
+              <Switch
+                label="Published"
+                defaultChecked={formData.released}
+                onChange={(checked) => setFormData(prev => ({ ...prev, released: checked }))}
+              />
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Make this music visible to users
+              </p>
+            </div>
           </div>
+
+          {errors.submit && (
+            <div className="text-red-500 text-sm">{errors.submit}</div>
+          )}
 
           <div className="flex justify-end gap-3 pt-6">
             <ButtonAction
@@ -258,7 +384,7 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
               variant="primary"
               loading={loading}
             >
-              {music ? 'Update Music' : 'Upload Music'}
+              {music ? 'Update Music' : 'Create Music'}
             </ButtonAction>
           </div>
         </form>

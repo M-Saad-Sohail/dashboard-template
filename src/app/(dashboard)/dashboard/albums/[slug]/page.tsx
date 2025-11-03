@@ -11,6 +11,7 @@ import AlbumSelector from '@/components/admin/album-details/AlbumSelector';
 import AlbumTracksTable from '@/components/admin/album-details/AlbumTracksTable';
 import AddTrackModal from '@/components/admin/album-details/AddTrackModal';
 import AlbumFormModal from '@/components/admin/albums/AlbumFormModal';
+import TrackFormModal from '@/components/admin/tracks/TrackFormModal';
 import {
   fetchAlbumBySlug,
   fetchAllAlbumsForDropdown,
@@ -19,7 +20,7 @@ import {
   clearError,
 } from '@/_core/features/adminAlbumDetailsSlice';
 import { fetchAdminAlbums, updateAlbum } from '@/_core/features/adminAlbumsSlice';
-import { fetchAdminTracks } from '@/_core/features/adminTracksSlice';
+import { fetchAdminTracks, createTrack } from '@/_core/features/adminTracksSlice';
 import type { Audio, AudioAlbum } from '@/types/album';
 import { PlusIcon } from '@/icons';
 
@@ -36,12 +37,13 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
     (state) => state.adminAlbumDetails
   );
   const { albums } = useAppSelector((state) => state.adminAlbums);
-  const { tracks: allTracks } = useAppSelector((state) => state.adminTracks);
+  const { tracks: allTracks, creating: creatingTrack } = useAppSelector((state) => state.adminTracks);
   const { updating: updatingAlbum } = useAppSelector((state) => state.adminAlbums);
   const { authToken } = useAppSelector((state) => state.auth);
 
   const [isAddTrackModalOpen, setIsAddTrackModalOpen] = useState(false);
   const [isEditAlbumModalOpen, setIsEditAlbumModalOpen] = useState(false);
+  const [isCreateTrackModalOpen, setIsCreateTrackModalOpen] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -100,7 +102,10 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
     }
   };
 
-  const handleUpdateAlbum = async (albumData: Omit<AudioAlbum, 'id'>) => {
+  const handleUpdateAlbum = async (albumData: Omit<AudioAlbum, 'id'> & {
+    coverPortraitFile?: File;
+    coverLandscapeFile?: File;
+  }) => {
     if (album?.id) {
       const result = await dispatch(updateAlbum({ id: album.id, data: albumData, token: authToken }));
       if (updateAlbum.fulfilled.match(result)) {
@@ -110,6 +115,27 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
         // Refresh album data
         dispatch(fetchAlbumBySlug({ slug, token: authToken }));
       }
+    }
+  };
+
+  const handleCreateTrackInAlbum = async (trackData: Omit<Audio, 'id'> & {
+    trackFile?: File;
+    previewFile?: File;
+  }) => {
+    const result = await dispatch(createTrack({ 
+      trackData: {
+        ...trackData,
+        albumId: album?.id || '',
+      }, 
+      albumSlug: slug, // Use album slug for creating track within album
+      token: authToken 
+    }));
+    if (createTrack.fulfilled.match(result)) {
+      setIsCreateTrackModalOpen(false);
+      setSuccessMessage('Track created and added to album successfully!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+      // Refresh album data
+      dispatch(fetchAlbumBySlug({ slug, token: authToken }));
     }
   };
 
@@ -128,15 +154,26 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
             onAlbumChange={handleAlbumChange}
             loading={loading}
           />
-          <ButtonAction
-            variant="primary"
-            onClick={() => setIsAddTrackModalOpen(true)}
-            className="flex items-center gap-2"
-            disabled={!album}
-          >
-            <PlusIcon className="h-4 w-4" />
-            Add Track to Album
-          </ButtonAction>
+          <div className="flex gap-3">
+            <ButtonAction
+              variant="secondary"
+              onClick={() => setIsAddTrackModalOpen(true)}
+              className="flex items-center gap-2"
+              disabled={!album}
+            >
+              <PlusIcon className="h-4 w-4" />
+              Add Existing Tracks
+            </ButtonAction>
+            <ButtonAction
+              variant="primary"
+              onClick={() => setIsCreateTrackModalOpen(true)}
+              className="flex items-center gap-2"
+              disabled={!album}
+            >
+              <PlusIcon className="h-4 w-4" />
+              Create New Track
+            </ButtonAction>
+          </div>
         </div>
 
         {/* Success/Error Messages */}
@@ -192,6 +229,14 @@ const AlbumDetailsPage = ({ params }: PageProps) => {
           onSubmit={handleUpdateAlbum}
           album={album}
           loading={updatingAlbum}
+        />
+
+        <TrackFormModal
+          isOpen={isCreateTrackModalOpen}
+          onClose={() => setIsCreateTrackModalOpen(false)}
+          onSubmit={handleCreateTrackInAlbum}
+          albums={[album!].filter(Boolean)}
+          loading={creatingTrack}
         />
       </div>
     </>

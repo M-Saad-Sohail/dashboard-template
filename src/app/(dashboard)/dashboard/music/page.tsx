@@ -56,7 +56,11 @@ const MusicPage = () => {
     dispatch(setFilters({ ...newFilters, page: 1 }));
   };
 
-  const handleCreateMusic = async (musicData: Omit<Audio, 'id'>) => {
+  const handleCreateMusic = async (musicData: Omit<Audio, 'id'> & {
+    trackFile?: File;
+    previewFile?: File;
+    coverArtFile?: File;
+  }) => {
     const result = await dispatch(createMusic({ musicData, token: authToken }));
     if (createMusic.fulfilled.match(result)) {
       setIsCreateModalOpen(false);
@@ -65,7 +69,11 @@ const MusicPage = () => {
     }
   };
 
-  const handleUpdateMusic = async (musicData: Omit<Audio, 'id'>) => {
+  const handleUpdateMusic = async (musicData: Omit<Audio, 'id'> & {
+    trackFile?: File;
+    previewFile?: File;
+    coverArtFile?: File;
+  }) => {
     if (currentMusic?.id) {
       const result = await dispatch(updateMusic({ id: currentMusic.id, data: musicData, token: authToken }));
       if (updateMusic.fulfilled.match(result)) {

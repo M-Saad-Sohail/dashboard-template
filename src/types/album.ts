@@ -7,6 +7,8 @@ export interface Audio {
     released: boolean;
     premium: boolean;
     duration: number;
+    narrator?: string | null;
+    subtitle?: string | null;
     album: {
       title: string;
       slug: string;
@@ -34,6 +36,7 @@ export interface Audio {
     sections?: string[];
     position?: number;
     createdAt?: string;
+    categoryId?: string;
   }
   
   export interface PaginationMetadata {

@@ -146,7 +146,10 @@ export const fetchAdminAlbums = createAsyncThunk<
 );
 
 interface CreateAlbumParams {
-  albumData: Omit<AudioAlbum, 'id'>;
+  albumData: Omit<AudioAlbum, 'id'> & {
+    coverPortraitFile?: File;
+    coverLandscapeFile?: File;
+  };
   token: string | null;
 }
 
@@ -158,9 +161,41 @@ export const createAlbum = createAsyncThunk<
   'adminAlbums/createAlbum',
   async ({ albumData, token }, { rejectWithValue }) => {
     try {
+      const formData = new FormData();
+      
+      // Add album type
+      formData.append('album_type', 'Meditation');
+      
+      // Add basic fields
+      formData.append('title', albumData.title);
+      formData.append('slug', albumData.slug);
+      formData.append('sections', albumData.sections?.join(',') || 'RenewMe');
+      
+      if (albumData.author) formData.append('author', albumData.author);
+      if (albumData.narrator) formData.append('narrator', albumData.narrator);
+      
+      // Add booleans as strings
+      formData.append('released', albumData.released ? 'true' : 'false');
+      formData.append('premium', albumData.premium ? 'true' : 'false');
+      
+      // Add numbers as strings
+      formData.append('position', (albumData.position || 1).toString());
+      if (albumData.categoryId) formData.append('category_id', albumData.categoryId.toString());
+      
+      // Add files
+      if (albumData.coverPortraitFile) {
+        formData.append('cover_portrait', albumData.coverPortraitFile);
+      }
+      if (albumData.coverLandscapeFile) {
+        formData.append('cover_small_landscape', albumData.coverLandscapeFile);
+      }
+
       const response = await makeRequest('post', '/albums', {
-        data: albumData,
+        data: formData,
         token,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
         successMessage: 'Album created successfully!',
         errorMessage: 'Failed to create album',
       });
@@ -173,7 +208,10 @@ export const createAlbum = createAsyncThunk<
 
 interface UpdateAlbumParams {
   id: string;
-  data: Partial<AudioAlbum>;
+  data: Partial<AudioAlbum> & {
+    coverPortraitFile?: File;
+    coverLandscapeFile?: File;
+  };
   token: string | null;
 }
 
@@ -185,9 +223,40 @@ export const updateAlbum = createAsyncThunk<
   'adminAlbums/updateAlbum',
   async ({ id, data, token }, { rejectWithValue }) => {
     try {
+      let requestData: any = data;
+      let headers: any = {};
+      
+      // If files are included, use FormData
+      if (data.coverPortraitFile || data.coverLandscapeFile) {
+        const formData = new FormData();
+        
+        // Add basic fields
+        if (data.title) formData.append('title', data.title);
+        if (data.slug) formData.append('slug', data.slug);
+        if (data.sections) formData.append('sections', data.sections.join(','));
+        if (data.author) formData.append('author', data.author);
+        if (data.narrator) formData.append('narrator', data.narrator);
+        if (data.description) formData.append('description', data.description);
+        
+        // Add booleans as strings
+        if (data.released !== undefined) formData.append('released', data.released ? 'true' : 'false');
+        if (data.premium !== undefined) formData.append('premium', data.premium ? 'true' : 'false');
+        
+        // Add numbers as strings
+        if (data.position) formData.append('position', data.position.toString());
+        if (data.categoryId) formData.append('category_id', data.categoryId.toString());
+        
+        // Add files
+        if (data.coverPortraitFile) formData.append('cover_portrait', data.coverPortraitFile);
+        if (data.coverLandscapeFile) formData.append('cover_small_landscape', data.coverLandscapeFile);
+        
+        requestData = formData;
+      }
+
       const response = await makeRequest('put', `/albums/${id}`, {
-        data,
+        data: requestData,
         token,
+        ...(Object.keys(headers).length > 0 && { headers }),
         successMessage: 'Album updated successfully!',
         errorMessage: 'Failed to update album',
       });

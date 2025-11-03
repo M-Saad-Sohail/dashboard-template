@@ -6,12 +6,18 @@ import ButtonAction from '@/components/ui/button/ButtonAction';
 import InputField from '@/components/form/input/InputField';
 import TextArea from '@/components/form/input/TextArea';
 import Switch from '@/components/form/switch/Switch';
+import FileUploadField from '@/components/form/input/FileUploadField';
 import { AudioAlbum } from '@/types/album';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import Image from 'next/image';
 
 interface AlbumFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<AudioAlbum, 'id'>) => void;
+  onSubmit: (data: Omit<AudioAlbum, 'id'> & {
+    coverPortraitFile?: File;
+    coverLandscapeFile?: File;
+  }) => void;
   album?: AudioAlbum | null;
   loading?: boolean;
 }
@@ -23,14 +29,36 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
   album,
   loading,
 }) => {
+  const dispatch = useAppDispatch();
+  const { authToken } = useAppSelector((state) => state.auth);
+  
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
     description: '',
     coverPortrait: '',
     coverSmallLandscape: '',
+    sections: 'RenewMe',
+    author: '',
+    narrator: '',
     premium: false,
     released: false,
+  });
+
+  const [files, setFiles] = useState<{
+    coverPortrait: File | null;
+    coverSmallLandscape: File | null;
+  }>({
+    coverPortrait: null,
+    coverSmallLandscape: null,
+  });
+
+  const [previews, setPreviews] = useState<{
+    coverPortrait: string | null;
+    coverSmallLandscape: string | null;
+  }>({
+    coverPortrait: null,
+    coverSmallLandscape: null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -43,8 +71,15 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
         description: album.description || '',
         coverPortrait: album.coverPortrait || '',
         coverSmallLandscape: album.coverSmallLandscape || '',
+        sections: album.sections?.join(',') || 'RenewMe',
+        author: album.author || '',
+        narrator: album.narrator || '',
         premium: album.premium || false,
         released: album.released || false,
+      });
+      setPreviews({
+        coverPortrait: album.coverPortrait || null,
+        coverSmallLandscape: album.coverSmallLandscape || null,
       });
     } else {
       setFormData({
@@ -53,10 +88,21 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
         description: '',
         coverPortrait: '',
         coverSmallLandscape: '',
+        sections: 'RenewMe',
+        author: '',
+        narrator: '',
         premium: false,
         released: false,
       });
+      setPreviews({
+        coverPortrait: null,
+        coverSmallLandscape: null,
+      });
     }
+    setFiles({
+      coverPortrait: null,
+      coverSmallLandscape: null,
+    });
     setErrors({});
   }, [album, isOpen]);
 
@@ -76,6 +122,20 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
     }));
   };
 
+  const handleFileChange = (field: 'coverPortrait' | 'coverSmallLandscape') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFiles(prev => ({ ...prev, [field]: file }));
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviews(prev => ({ ...prev, [field]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -87,19 +147,30 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
       newErrors.slug = 'Slug must be lowercase with hyphens only';
     }
 
+    // Only require images for new albums
+    if (!album && !files.coverPortrait && !formData.coverPortrait) {
+      newErrors.coverPortrait = 'Portrait cover image is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
-    }
+    if (!validateForm()) return;
+
+    // Submit the album data with files
+    onSubmit({
+      ...formData,
+      sections: formData.sections?.split(',').filter(s => s.trim()) || ['RenewMe'],
+      coverPortraitFile: files.coverPortrait || undefined,
+      coverLandscapeFile: files.coverSmallLandscape || undefined,
+    });
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose}>
       <div className="px-6 py-6">
         <h3 className="text-xl font-semibold text-black dark:text-white mb-6">
           {album ? `Edit Album: ${album.title}` : 'Create Album'}
@@ -127,48 +198,91 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
             helperText="URL-friendly version of the title"
           />
 
-          <TextArea
-            label="Description"
-            name="description"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            placeholder="Enter album description (optional)"
-            rows={3}
-          />
-
-          <InputField
-            label="Cover Portrait URL"
-            name="coverPortrait"
-            value={formData.coverPortrait}
-            onChange={(e) => setFormData(prev => ({ ...prev, coverPortrait: e.target.value }))}
-            placeholder="https://example.com/cover-portrait.jpg"
-            helperText="Portrait image URL for the album"
-          />
-
-          <InputField
-            label="Cover Landscape URL"
-            name="coverSmallLandscape"
-            value={formData.coverSmallLandscape}
-            onChange={(e) => setFormData(prev => ({ ...prev, coverSmallLandscape: e.target.value }))}
-            placeholder="https://example.com/cover-landscape.jpg"
-            helperText="Landscape image URL for the album"
-          />
-
-          <div className="space-y-4">
-            <Switch
-              label="Premium Album"
-              checked={formData.premium}
-              onChange={(checked) => setFormData(prev => ({ ...prev, premium: checked }))}
-              helperText="Mark this album as premium content"
-            />
-
-            <Switch
-              label="Published"
-              checked={formData.released}
-              onChange={(checked) => setFormData(prev => ({ ...prev, released: checked }))}
-              helperText="Make this album visible to users"
+          <div>
+            <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+              Description
+            </label>
+            <TextArea
+              value={formData.description}
+              onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
+              placeholder="Enter album description (optional)"
+              rows={3}
             />
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <FileUploadField
+                label="Cover Portrait Image"
+                name="coverPortrait"
+                accept="image/*"
+                onChange={handleFileChange('coverPortrait')}
+                error={errors.coverPortrait}
+                helperText="Portrait image for the album"
+                required={!album}
+              />
+              {previews.coverPortrait && (
+                <div className="mt-2">
+                  <Image
+                    src={previews.coverPortrait}
+                    alt="Cover Portrait Preview"
+                    width={120}
+                    height={160}
+                    className="rounded-lg object-cover"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <FileUploadField
+                label="Cover Landscape Image"
+                name="coverSmallLandscape"
+                accept="image/*"
+                onChange={handleFileChange('coverSmallLandscape')}
+                helperText="Landscape image for the album (optional)"
+              />
+              {previews.coverSmallLandscape && (
+                <div className="mt-2">
+                  <Image
+                    src={previews.coverSmallLandscape}
+                    alt="Cover Landscape Preview"
+                    width={160}
+                    height={90}
+                    className="rounded-lg object-cover"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <Switch
+                label="Premium Album"
+                defaultChecked={formData.premium}
+                onChange={(checked) => setFormData(prev => ({ ...prev, premium: checked }))}
+              />
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Mark this album as premium content
+              </p>
+            </div>
+
+            <div>
+              <Switch
+                label="Published"
+                defaultChecked={formData.released}
+                onChange={(checked) => setFormData(prev => ({ ...prev, released: checked }))}
+              />
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Make this album visible to users
+              </p>
+            </div>
+          </div>
+
+          {errors.submit && (
+            <div className="text-red-500 text-sm">{errors.submit}</div>
+          )}
 
           <div className="flex justify-end gap-3 pt-6">
             <ButtonAction

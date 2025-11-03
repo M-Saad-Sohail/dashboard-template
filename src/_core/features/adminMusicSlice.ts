@@ -120,7 +120,11 @@ export const fetchAdminMusic = createAsyncThunk<
 );
 
 interface CreateMusicParams {
-  musicData: Omit<Audio, 'id'>;
+  musicData: Omit<Audio, 'id'> & {
+    trackFile?: File;
+    previewFile?: File;
+    coverArtFile?: File;
+  };
   token: string | null;
 }
 
@@ -132,8 +136,39 @@ export const createMusic = createAsyncThunk<
   'adminMusic/createMusic',
   async ({ musicData, token }, { rejectWithValue }) => {
     try {
+      const formData = new FormData();
+      
+      // Add item type
+      formData.append('item_type', 'Music');
+      
+      // Add basic fields
+      formData.append('title', musicData.title);
+      formData.append('sections', musicData.sections?.join(',') || 'RenewMe');
+      
+      if (musicData.artist) formData.append('artist', musicData.artist);
+      
+      // Add duration as string
+      formData.append('duration', musicData.duration.toString());
+      
+      // Add booleans as strings
+      formData.append('released', musicData.released ? 'true' : 'false');
+      formData.append('premium', musicData.premium ? 'true' : 'false');
+      
+      // Add numbers as strings
+      formData.append('position', (musicData.position || 1).toString());
+      if (musicData.albumId) formData.append('album_id', musicData.albumId);
+      
+      // Add files
+      if (musicData.trackFile) {
+        formData.append('track', musicData.trackFile);
+      }
+      if (musicData.previewFile) {
+        formData.append('preview', musicData.previewFile);
+      }
+      // Note: According to the workflow, no cover images for music
+
       const response = await makeRequest('post', '/music', {
-        data: musicData,
+        data: formData,
         token,
         successMessage: 'Music created successfully!',
         errorMessage: 'Failed to create music',
@@ -147,7 +182,11 @@ export const createMusic = createAsyncThunk<
 
 interface UpdateMusicParams {
   id: string;
-  data: Partial<Audio>;
+  data: Partial<Audio> & {
+    trackFile?: File;
+    previewFile?: File;
+    coverArtFile?: File;
+  };
   token: string | null;
 }
 
@@ -159,9 +198,41 @@ export const updateMusic = createAsyncThunk<
   'adminMusic/updateMusic',
   async ({ id, data, token }, { rejectWithValue }) => {
     try {
+      let requestData: any = data;
+      let headers: any = {};
+      
+      // If files are included, use FormData
+      if (data.trackFile || data.previewFile || data.coverArtFile) {
+        const formData = new FormData();
+        
+        // Add basic fields
+        if (data.title) formData.append('title', data.title);
+        if (data.sections) formData.append('sections', data.sections.join(','));
+        if (data.artist) formData.append('artist', data.artist);
+        
+        // Add duration as string
+        if (data.duration) formData.append('duration', data.duration.toString());
+        
+        // Add booleans as strings
+        if (data.released !== undefined) formData.append('released', data.released ? 'true' : 'false');
+        if (data.premium !== undefined) formData.append('premium', data.premium ? 'true' : 'false');
+        
+        // Add numbers as strings
+        if (data.position) formData.append('position', data.position.toString());
+        if (data.albumId) formData.append('album_id', data.albumId);
+        
+        // Add files
+        if (data.trackFile) formData.append('track', data.trackFile);
+        if (data.previewFile) formData.append('preview', data.previewFile);
+        // Note: According to the workflow, no cover images for music
+        
+        requestData = formData;
+      }
+
       const response = await makeRequest('put', `/music/${id}`, {
-        data,
+        data: requestData,
         token,
+        ...(Object.keys(headers).length > 0 && { headers }),
         successMessage: 'Music updated successfully!',
         errorMessage: 'Failed to update music',
       });

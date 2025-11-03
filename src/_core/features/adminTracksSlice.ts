@@ -161,7 +161,11 @@ export const fetchAdminTracks = createAsyncThunk<
 );
 
 interface CreateTrackParams {
-  trackData: Omit<Audio, 'id'>;
+  trackData: Omit<Audio, 'id'> & {
+    trackFile?: File;
+    previewFile?: File;
+  };
+  albumSlug?: string; // If provided, create track within album
   token: string | null;
 }
 
@@ -171,10 +175,51 @@ export const createTrack = createAsyncThunk<
   { rejectValue: string }
 >(
   'adminTracks/createTrack',
-  async ({ trackData, token }, { rejectWithValue }) => {
+  async ({ trackData, albumSlug, token }, { rejectWithValue }) => {
     try {
-      const response = await makeRequest('post', '/tracks', {
-        data: trackData,
+      const formData = new FormData();
+      
+      // Add item type
+      formData.append('item_type', 'Track');
+      
+      // Add basic fields
+      formData.append('title', trackData.title);
+      if (trackData.subtitle) formData.append('subtitle', trackData.subtitle);
+      formData.append('sections', trackData.sections?.join(',') || 'RenewMe');
+      
+      if (trackData.artist) formData.append('artist', trackData.artist);
+      if (trackData.narrator) formData.append('narrator', trackData.narrator);
+      
+      // Add duration as string
+      formData.append('duration', trackData.duration.toString());
+      
+      // Add booleans as strings
+      formData.append('released', trackData.released ? 'true' : 'false');
+      formData.append('premium', trackData.premium ? 'true' : 'false');
+      
+      // Add numbers as strings
+      formData.append('position', (trackData.position || 1).toString());
+      if ((trackData as any).preview_duration) formData.append('preview_duration', (trackData as any).preview_duration.toString());
+      if ((trackData as any).categoryId) formData.append('category_id', (trackData as any).categoryId.toString());
+      
+      // Add album ID if not creating within an album
+      if (!albumSlug && trackData.albumId) {
+        formData.append('album_id', trackData.albumId);
+      }
+      
+      // Add files
+      if (trackData.trackFile) {
+        formData.append('track', trackData.trackFile);
+      }
+      if (trackData.previewFile) {
+        formData.append('preview', trackData.previewFile);
+      }
+      
+      // Determine endpoint based on whether we're creating within an album
+      const endpoint = albumSlug ? `/albums/${albumSlug}/tracks` : '/tracks';
+
+      const response = await makeRequest('post', endpoint, {
+        data: formData,
         token,
         successMessage: 'Track created successfully!',
         errorMessage: 'Failed to create track',
@@ -188,7 +233,11 @@ export const createTrack = createAsyncThunk<
 
 interface UpdateTrackParams {
   id: string;
-  data: Partial<Audio>;
+  data: Partial<Audio> & {
+    trackFile?: File;
+    previewFile?: File;
+  };
+  albumSlug?: string; // If updating within an album context
   token: string | null;
 }
 
@@ -198,11 +247,48 @@ export const updateTrack = createAsyncThunk<
   { rejectValue: string }
 >(
   'adminTracks/updateTrack',
-  async ({ id, data, token }, { rejectWithValue }) => {
+  async ({ id, data, albumSlug, token }, { rejectWithValue }) => {
     try {
-      const response = await makeRequest('put', `/tracks/${id}`, {
-        data,
+      let requestData: any = data;
+      let headers: any = {};
+      
+      // If files are included, use FormData
+      if (data.trackFile || data.previewFile) {
+        const formData = new FormData();
+        
+        // Add basic fields
+        if (data.title) formData.append('title', data.title);
+        if (data.subtitle) formData.append('subtitle', data.subtitle);
+        if (data.sections) formData.append('sections', data.sections.join(','));
+        if (data.artist) formData.append('artist', data.artist);
+        if (data.narrator) formData.append('narrator', data.narrator);
+        
+        // Add duration as string
+        if (data.duration) formData.append('duration', data.duration.toString());
+        
+        // Add booleans as strings
+        if (data.released !== undefined) formData.append('released', data.released ? 'true' : 'false');
+        if (data.premium !== undefined) formData.append('premium', data.premium ? 'true' : 'false');
+        
+        // Add numbers as strings
+        if (data.position) formData.append('position', data.position.toString());
+        if ((data as any).preview_duration) formData.append('preview_duration', (data as any).preview_duration.toString());
+        if ((data as any).categoryId) formData.append('category_id', (data as any).categoryId.toString());
+        
+        // Add files
+        if (data.trackFile) formData.append('track', data.trackFile);
+        if (data.previewFile) formData.append('preview', data.previewFile);
+        
+        requestData = formData;
+      }
+      
+      // Determine endpoint based on whether we're updating within an album
+      const endpoint = albumSlug ? `/albums/${albumSlug}/tracks/${id}` : `/tracks/${id}`;
+
+      const response = await makeRequest('put', endpoint, {
+        data: requestData,
         token,
+        ...(Object.keys(headers).length > 0 && { headers }),
         successMessage: 'Track updated successfully!',
         errorMessage: 'Failed to update track',
       });

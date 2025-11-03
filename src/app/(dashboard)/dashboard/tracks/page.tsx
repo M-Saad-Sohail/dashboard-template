@@ -79,7 +79,10 @@ const TracksPage = () => {
     dispatch(setFilters({ ...newFilters, page: 1 }));
   };
 
-  const handleCreateTrack = async (trackData: Omit<Audio, 'id'>) => {
+  const handleCreateTrack = async (trackData: Omit<Audio, 'id'> & {
+    trackFile?: File;
+    previewFile?: File;
+  }) => {
     const result = await dispatch(createTrack({ trackData, token: authToken }));
     if (createTrack.fulfilled.match(result)) {
       setIsCreateModalOpen(false);
@@ -88,7 +91,10 @@ const TracksPage = () => {
     }
   };
 
-  const handleUpdateTrack = async (trackData: Omit<Audio, 'id'>) => {
+  const handleUpdateTrack = async (trackData: Omit<Audio, 'id'> & {
+    trackFile?: File;
+    previewFile?: File;
+  }) => {
     if (currentTrack?.id) {
       const result = await dispatch(updateTrack({ id: currentTrack.id, data: trackData, token: authToken }));
       if (updateTrack.fulfilled.match(result)) {

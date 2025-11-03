@@ -6,12 +6,17 @@ import ButtonAction from '@/components/ui/button/ButtonAction';
 import InputField from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Switch from '@/components/form/switch/Switch';
-import { Audio, AudioAlbum } from '@/types/album';
+import FileUploadField from '@/components/form/input/FileUploadField';
+import type { Audio, AudioAlbum } from '@/types/album';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 
 interface TrackFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Audio, 'id'>) => void;
+  onSubmit: (data: Omit<Audio, 'id'> & {
+    trackFile?: File;
+    previewFile?: File;
+  }) => void;
   track?: Audio | null;
   albums?: AudioAlbum[];
   loading?: boolean;
@@ -25,6 +30,9 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
   albums = [],
   loading,
 }) => {
+  const dispatch = useAppDispatch();
+  const { authToken } = useAppSelector((state) => state.auth);
+  
   const [formData, setFormData] = useState({
     title: '',
     artist: '',
@@ -33,11 +41,26 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
     duration: 0,
     premium: false,
     released: false,
+    preview: null as string | null,
+    sections: 'RenewMe',
+    subtitle: '',
+    narrator: '',
+  });
+
+  const [files, setFiles] = useState<{
+    track: File | null;
+    preview: File | null;
+  }>({
+    track: null,
     preview: null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [durationInput, setDurationInput] = useState({ minutes: 0, seconds: 0 });
+  const [audioDurations, setAudioDurations] = useState<{
+    track: number;
+    preview: number;
+  }>({ track: 0, preview: 0 });
 
   useEffect(() => {
     if (track) {
@@ -50,7 +73,14 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
         premium: track.premium || false,
         released: track.released || false,
         preview: track.preview || '',
+        sections: track.sections?.join(',') || 'RenewMe',
+        subtitle: track.subtitle || '',
+        narrator: track.narrator || '',
       });
+      // Set duration input fields from track duration
+      const minutes = Math.floor((track.duration || 0) / 60);
+      const seconds = (track.duration || 0) % 60;
+      setDurationInput({ minutes, seconds });
     } else {
       setFormData({
         title: '',
@@ -61,9 +91,13 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
         premium: false,
         released: false,
         preview: '',
+        sections: 'RenewMe',
+        subtitle: '',
+        narrator: '',
       });
       setDurationInput({ minutes: 0, seconds: 0 });
     }
+    setFiles({ track: null, preview: null });
     setErrors({});
   }, [track, isOpen]);
 
@@ -74,6 +108,29 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
       label: album.title,
     })),
   ];
+
+  const handleAudioFileChange = (field: 'track' | 'preview') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFiles(prev => ({ ...prev, [field]: file }));
+      
+      // Get audio duration
+      const audio = new Audio();
+      audio.onloadedmetadata = () => {
+        const duration = Math.floor(audio.duration);
+        setAudioDurations(prev => ({ ...prev, [field]: duration }));
+        
+        // Auto-set duration if it's the main track
+        if (field === 'track' && duration > 0) {
+          const minutes = Math.floor(duration / 60);
+          const seconds = duration % 60;
+          setDurationInput({ minutes, seconds });
+          setFormData(prev => ({ ...prev, duration }));
+        }
+      };
+      audio.src = URL.createObjectURL(file);
+    }
+  };
 
   const handleDurationChange = (field: 'minutes' | 'seconds', value: string) => {
     const numValue = parseInt(value) || 0;
@@ -92,10 +149,9 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
       newErrors.title = 'Title must be at least 3 characters';
     }
 
-    if (!formData.track) {
-      newErrors.track = 'Track URL is required';
-    } else if (!isValidUrl(formData.track)) {
-      newErrors.track = 'Please enter a valid Track URL';
+    // Only require track file for new tracks
+    if (!track && !files.track && !formData.track) {
+      newErrors.track = 'Track audio file is required';
     }
 
     if (formData.duration === 0) {
@@ -106,20 +162,19 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const isValidUrl = (string: string) => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData as Omit<Audio, 'id'>);
-    }
+    if (!validateForm()) return;
+
+    // Submit the track data with files
+    onSubmit({
+      ...formData,
+      preview: formData.preview || undefined,
+      sections: formData.sections?.split(',').filter(s => s.trim()) || ['RenewMe'],
+      album: null, // Will be set by the backend based on albumId
+      trackFile: files.track || undefined,
+      previewFile: files.preview || undefined,
+    });
   };
 
   return (
@@ -131,86 +186,120 @@ const TrackFormModal: React.FC<TrackFormModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <InputField
+            label="Title"
             name="title"
             value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            error={!!errors.title}
+            error={errors.title}
+            required
             placeholder="Enter track title"
           />
 
           <InputField
+            label="Artist"
             name="artist"
             value={formData.artist}
             onChange={(e) => setFormData(prev => ({ ...prev, artist: e.target.value }))}
             placeholder="Enter artist name (optional)"
           />
 
-          <Select
-            value={formData.albumId}
-            onChange={(value) => setFormData(prev => ({ ...prev, albumId: value }))}
-            options={albumOptions}
-            placeholder="Select an album (optional)"
-          />
+          <div>
+            <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+              Album
+            </label>
+            <Select
+              defaultValue={formData.albumId}
+              onChange={(value) => setFormData(prev => ({ ...prev, albumId: value }))}
+              options={albumOptions}
+              placeholder="Select an album (optional)"
+            />
+          </div>
 
-          <InputField 
+          <FileUploadField
+            label="Track Audio File"
             name="track"
-            value={formData.track}
-            onChange={(e) => setFormData(prev => ({ ...prev, track: e.target.value }))}
-            error={!!errors.track}
-            placeholder="https://example.com/audio.mp3"
+            accept="audio/*"
+            onChange={handleAudioFileChange('track')}
+            error={errors.track}
+            helperText={track?.track ? 'Upload new file to replace existing' : 'MP3, WAV, OGG, AAC, or FLAC'}
+            required={!track}
           />
+          {files.track && audioDurations.track > 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 -mt-2">
+              Duration: {Math.floor(audioDurations.track / 60)}:{(audioDurations.track % 60).toString().padStart(2, '0')}
+            </p>
+          )}
 
-          <InputField
+          <FileUploadField
+            label="Preview Audio File (Optional)"
             name="preview"
-            value={formData.preview || ''}
-            onChange={(e) => setFormData(prev => ({ ...prev, preview: e.target.value }))}
-            error={!!errors.preview || formData.preview === null}
-            placeholder="https://example.com/preview.mp3"
+            accept="audio/*"
+            onChange={handleAudioFileChange('preview')}
+            helperText="Short preview clip (30-60 seconds)"
           />
+          {files.preview && audioDurations.preview > 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 -mt-2">
+              Preview Duration: {Math.floor(audioDurations.preview / 60)}:{(audioDurations.preview % 60).toString().padStart(2, '0')}
+            </p>
+          )}
 
           <div>
-            <label className="mb-2.5 block font-medium text-black dark:text-white">
-              Duration <span className="text-danger">*</span>
+            <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+              Duration <span className="text-meta-1">*</span>
             </label>
             <div className="flex items-center gap-2">
-              <InputField
+              <input
                 type="number"
                 value={durationInput.minutes}
                 onChange={(e) => handleDurationChange('minutes', e.target.value)}
                 placeholder="0"
                 min="0"
-                className="w-20"
+                className="w-20 rounded border-[1.5px] border-stroke bg-transparent py-2 px-3 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
               />
               <span className="text-black dark:text-white">min</span>
-              <InputField
+              <input
                 type="number"
                 value={durationInput.seconds}
                 onChange={(e) => handleDurationChange('seconds', e.target.value)}
                 placeholder="0"
                 min="0"
                 max="59"
-                className="w-20"
+                className="w-20 rounded border-[1.5px] border-stroke bg-transparent py-2 px-3 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
               />
               <span className="text-black dark:text-white">sec</span>
             </div>
             {errors.duration && (
-              <p className="mt-1 text-xs text-danger">{errors.duration}</p>
+              <p className="mt-1 text-sm text-meta-1">{errors.duration}</p>
             )}
           </div>
 
           <div className="space-y-4">
-            <Switch
-              label="Premium Track"
-              defaultChecked={formData.premium || false}
-              onChange={(checked) => setFormData(prev => ({ ...prev, premium: checked }))}
-            />
+            <div>
+              <Switch
+                label="Premium Track"
+                defaultChecked={formData.premium}
+                onChange={(checked) => setFormData(prev => ({ ...prev, premium: checked }))}
+              />
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Mark this track as premium content
+              </p>
+            </div>
 
-            <Switch
-              label="Published"
-              defaultChecked={formData.released || false}
-              onChange={(checked) => setFormData(prev => ({ ...prev, released: checked }))}
-            />
+            <div>
+              <Switch
+                label="Published"
+                defaultChecked={formData.released}
+                onChange={(checked) => setFormData(prev => ({ ...prev, released: checked }))}
+              />
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Make this track visible to users
+              </p>
+            </div>
           </div>
+
+          {errors.submit && (
+            <div className="text-red-500 text-sm">{errors.submit}</div>
+          )}
 
           <div className="flex justify-end gap-3 pt-6">
             <ButtonAction

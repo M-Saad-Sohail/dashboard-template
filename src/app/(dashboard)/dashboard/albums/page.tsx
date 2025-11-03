@@ -66,7 +66,10 @@ const AlbumsPage = () => {
     dispatch(setFilters({ ...newFilters, page: 1 }));
   };
 
-  const handleCreateAlbum = async (albumData: Omit<AudioAlbum, 'id'>) => {
+  const handleCreateAlbum = async (albumData: Omit<AudioAlbum, 'id'> & {
+    coverPortraitFile?: File;
+    coverLandscapeFile?: File;
+  }) => {
     const result = await dispatch(createAlbum({ albumData, token: authToken }));
     if (createAlbum.fulfilled.match(result)) {
       setIsCreateModalOpen(false);
@@ -74,7 +77,10 @@ const AlbumsPage = () => {
     }
   };
 
-  const handleUpdateAlbum = async (albumData: Omit<AudioAlbum, 'id'>) => {
+  const handleUpdateAlbum = async (albumData: Omit<AudioAlbum, 'id'> & {
+    coverPortraitFile?: File;
+    coverLandscapeFile?: File;
+  }) => {
     if (currentAlbum?.id) {
       const result = await dispatch(updateAlbum({ id: currentAlbum.id, data: albumData, token: authToken }));
       if (updateAlbum.fulfilled.match(result)) {

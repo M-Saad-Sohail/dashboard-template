@@ -14,8 +14,11 @@ interface InputProps {
   step?: number;
   disabled?: boolean;
   success?: boolean;
-  error?: boolean;
+  error?: boolean | string;
   hint?: string; // Optional hint text
+  label?: string; // Optional label text
+  required?: boolean; // Optional required field
+  helperText?: string; // Optional helper text
 }
 
 const Input: FC<InputProps> = ({
@@ -34,6 +37,9 @@ const Input: FC<InputProps> = ({
   success = false,
   error = false,
   hint,
+  label,
+  required = false,
+  helperText,
 }) => {
   // Determine input styles based on state (disabled, success, error)
   let inputClasses = `h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 ${className}`;
@@ -49,25 +55,42 @@ const Input: FC<InputProps> = ({
     inputClasses += ` bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800`;
   }
 
+  const errorMessage = typeof error === 'string' ? error : '';
+  const showHelperText = helperText && !errorMessage;
+
   return (
-    <div className="relative">
+    <div className="mb-4.5">
+      {label && (
+        <label htmlFor={id || name} className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+          {label}
+          {required && <span className="text-meta-1">*</span>}
+        </label>
+      )}
       <input
         type={type}
-        id={id}
+        id={id || name}
         name={name}
         placeholder={placeholder}
         value={value}
         defaultValue={defaultValue}
         onChange={onChange}
+        className={inputClasses}
         min={min}
         max={max}
         step={step}
         disabled={disabled}
-        className={inputClasses}
       />
-
-      {/* Optional Hint Text */}
-      {hint && (
+      {showHelperText && (
+        <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+          {helperText}
+        </p>
+      )}
+      {errorMessage && (
+        <p className="mt-1.5 text-sm text-meta-1">
+          {errorMessage}
+        </p>
+      )}
+      {hint && !errorMessage && !showHelperText && (
         <p
           className={`mt-1.5 text-xs ${
             error
