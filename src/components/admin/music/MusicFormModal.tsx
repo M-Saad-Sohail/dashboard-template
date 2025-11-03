@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Modal from '@/components/ui/modal';
 import ButtonAction from '@/components/ui/button/ButtonAction';
 import InputField from '@/components/form/input/InputField';
-import Select from '@/components/form/Select';
 import Switch from '@/components/form/switch/Switch';
 import FileUploadField from '@/components/form/input/FileUploadField';
 import type { Audio } from '@/types/album';
@@ -13,7 +12,6 @@ import Image from 'next/image';
 
 // Extend Audio interface for music-specific fields
 interface MusicData extends Omit<Audio, 'id'> {
-  genre?: string;
   coverArt?: string;
   playCount?: number;
   sections?: string[];
@@ -40,7 +38,7 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const { authToken } = useAppSelector((state) => state.auth);
-  
+
   const [formData, setFormData] = useState<MusicData>({
     title: '',
     artist: '',
@@ -48,8 +46,6 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
     duration: 0,
     premium: false,
     released: false,
-    genre: '',
-    coverArt: '',
     preview: '',
     album: null,
     sections: ['RenewMe'],
@@ -57,11 +53,9 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
 
   const [files, setFiles] = useState<{
     track: File | null;
-    coverArt: File | null;
     preview: File | null;
   }>({
     track: null,
-    coverArt: null,
     preview: null,
   });
 
@@ -87,8 +81,6 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
         duration: music.duration || 0,
         premium: music.premium || false,
         released: music.released || false,
-        genre: (music as any).genre || '',
-        coverArt: (music as any).coverArt || '',
         preview: music.preview || '',
         album: music.album || null,
         sections: music.sections || ['RenewMe'],
@@ -108,8 +100,6 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
         duration: 0,
         premium: false,
         released: false,
-        genre: '',
-        coverArt: '',
         preview: '',
         album: null,
         sections: ['RenewMe'],
@@ -117,7 +107,7 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
       setDurationInput({ minutes: 0, seconds: 0 });
       setPreviews({ coverArt: null });
     }
-    setFiles({ track: null, coverArt: null, preview: null });
+    setFiles({ track: null, preview: null });
     setErrors({});
   }, [music, isOpen]);
 
@@ -140,13 +130,13 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       setFiles(prev => ({ ...prev, [field]: file }));
-      
+
       // Get audio duration
       const audio = new Audio();
       audio.onloadedmetadata = () => {
         const duration = Math.floor(audio.duration);
         setAudioDurations(prev => ({ ...prev, [field]: duration }));
-        
+
         // Auto-set duration if it's the main track
         if (field === 'track' && duration > 0) {
           const minutes = Math.floor(duration / 60);
@@ -159,25 +149,11 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
     }
   };
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFiles(prev => ({ ...prev, coverArt: file }));
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviews({ coverArt: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleDurationChange = (field: 'minutes' | 'seconds', value: string) => {
     const numValue = parseInt(value) || 0;
     const newDuration = { ...durationInput, [field]: numValue };
     setDurationInput(newDuration);
-    
+
     // Calculate total duration in seconds
     const totalSeconds = newDuration.minutes * 60 + newDuration.seconds;
     setFormData(prev => ({ ...prev, duration: totalSeconds }));
@@ -212,7 +188,6 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
       ...formData,
       trackFile: files.track || undefined,
       previewFile: files.preview || undefined,
-      coverArtFile: files.coverArt || undefined,
     });
   };
 
@@ -250,17 +225,6 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
             placeholder="Enter album name (optional)"
           />
 
-          <div>
-            <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
-              Genre
-            </label>
-            <Select
-              defaultValue={formData.genre || ''}
-              onChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}
-              options={genreOptions}
-            />
-          </div>
-
           <FileUploadField
             label="Music File"
             name="track"
@@ -290,27 +254,6 @@ const MusicFormModal: React.FC<MusicFormModalProps> = ({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <FileUploadField
-                label="Cover Art (Optional)"
-                name="coverArt"
-                accept="image/*"
-                onChange={handleImageFileChange}
-                helperText="Album artwork for the music"
-              />
-              {previews.coverArt && (
-                <div className="mt-2">
-                  <Image
-                    src={previews.coverArt}
-                    alt="Cover Art Preview"
-                    width={100}
-                    height={100}
-                    className="rounded-lg object-cover"
-                  />
-                </div>
-              )}
-            </div>
-
             <div>
               <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
                 Duration <span className="text-meta-1">*</span>

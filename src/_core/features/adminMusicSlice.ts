@@ -165,11 +165,13 @@ export const createMusic = createAsyncThunk<
       if (musicData.previewFile) {
         formData.append('preview', musicData.previewFile);
       }
-      // Note: According to the workflow, no cover images for music
 
       const response = await makeRequest('post', '/music', {
         data: formData,
         token,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
         successMessage: 'Music created successfully!',
         errorMessage: 'Failed to create music',
       });

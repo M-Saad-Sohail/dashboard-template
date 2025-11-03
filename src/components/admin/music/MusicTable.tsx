@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import BadgeStatus from '@/components/ui/badge/BadgeStatus';
 import { Audio } from '@/types/album';
-import { PlayIcon, PencilIcon, TrashIcon } from '@/icons';
+import { PencilIcon, TrashIcon } from '@/icons';
 import DataTable, { Column } from '@/components/ui/table/DataTable';
 
 // Extend Audio interface for music-specific fields
@@ -18,7 +18,6 @@ interface MusicTableProps {
   music: MusicItem[];
   onEdit: (music: MusicItem) => void;
   onDelete: (music: MusicItem) => void;
-  onPlay: (music: MusicItem) => void;
   loading?: boolean;
 }
 
@@ -26,24 +25,13 @@ const MusicTable: React.FC<MusicTableProps> = ({
   music,
   onEdit,
   onDelete,
-  onPlay,
   loading,
 }) => {
-  const [playingMusicId, setPlayingMusicId] = useState<string | null>(null);
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  const handlePlay = (musicItem: MusicItem) => {
-    if (playingMusicId === musicItem.id) {
-      setPlayingMusicId(null);
-    } else {
-      setPlayingMusicId(musicItem.id || null);
-      onPlay(musicItem);
-    }
   };
 
   // Define columns for the DataTable
@@ -103,22 +91,6 @@ const MusicTable: React.FC<MusicTableProps> = ({
       sortable: true,
     },
     {
-      header: 'Genre',
-      accessor: 'genre',
-      cell: (value) => (
-        <p className="text-gray-600 dark:text-gray-400">{value || '-'}</p>
-      ),
-      sortable: true,
-    },
-    {
-      header: 'Play Count',
-      accessor: 'playCount',
-      cell: (value) => (
-        <p className="text-black dark:text-white">{value || 0}</p>
-      ),
-      sortable: true,
-    },
-    {
       header: 'Premium',
       accessor: 'premium',
       cell: (value) => (
@@ -145,13 +117,6 @@ const MusicTable: React.FC<MusicTableProps> = ({
       accessor: 'id',
       cell: (value, row) => (
         <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={() => handlePlay(row)}
-            className="hover:text-primary transition-colors"
-            title={playingMusicId === row.id ? "Stop" : "Play"}
-          >
-            <PlayIcon className={`h-5 w-5 ${playingMusicId === row.id ? 'text-primary' : ''}`} />
-          </button>
           <button
             onClick={() => onEdit(row)}
             className="hover:text-primary transition-colors"

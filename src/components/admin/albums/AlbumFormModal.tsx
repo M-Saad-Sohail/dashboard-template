@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Modal from '@/components/ui/modal';
 import ButtonAction from '@/components/ui/button/ButtonAction';
 import InputField from '@/components/form/input/InputField';
-import TextArea from '@/components/form/input/TextArea';
 import Switch from '@/components/form/switch/Switch';
 import FileUploadField from '@/components/form/input/FileUploadField';
 import { AudioAlbum } from '@/types/album';
@@ -35,7 +34,6 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
-    description: '',
     coverPortrait: '',
     coverSmallLandscape: '',
     sections: 'RenewMe',
@@ -68,7 +66,6 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
       setFormData({
         title: album.title || '',
         slug: album.slug || '',
-        description: album.description || '',
         coverPortrait: album.coverPortrait || '',
         coverSmallLandscape: album.coverSmallLandscape || '',
         sections: album.sections?.join(',') || 'RenewMe',
@@ -85,7 +82,6 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
       setFormData({
         title: '',
         slug: '',
-        description: '',
         coverPortrait: '',
         coverSmallLandscape: '',
         sections: 'RenewMe',
@@ -198,17 +194,21 @@ const AlbumFormModal: React.FC<AlbumFormModalProps> = ({
             helperText="URL-friendly version of the title"
           />
 
-          <div>
-            <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
-              Description
-            </label>
-            <TextArea
-              value={formData.description}
-              onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
-              placeholder="Enter album description (optional)"
-              rows={3}
-            />
-          </div>
+          <InputField
+            label="Author"
+            name="author"
+            value={formData.author}
+            onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
+            placeholder="Enter author name (optional)"
+          />
+
+          <InputField
+            label="Narrator"
+            name="narrator"
+            value={formData.narrator}
+            onChange={(e) => setFormData(prev => ({ ...prev, narrator: e.target.value }))}
+            placeholder="Enter narrator name (optional)"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

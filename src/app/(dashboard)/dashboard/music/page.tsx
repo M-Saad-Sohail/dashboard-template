@@ -10,7 +10,6 @@ import MusicTable from '@/components/admin/music/MusicTable';
 import MusicFormModal from '@/components/admin/music/MusicFormModal';
 import DeleteMusicModal from '@/components/admin/music/DeleteMusicModal';
 import MusicFilters from '@/components/admin/music/MusicFilters';
-import AudioPreviewPlayer from '@/components/admin/tracks/AudioPreviewPlayer';
 import Pagination from '@/components/tables/Pagination';
 import {
   fetchAdminMusic,
@@ -45,8 +44,6 @@ const MusicPage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
-  const [playingMusicId, setPlayingMusicId] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchAdminMusic({ token: authToken }));
@@ -59,7 +56,6 @@ const MusicPage = () => {
   const handleCreateMusic = async (musicData: Omit<Audio, 'id'> & {
     trackFile?: File;
     previewFile?: File;
-    coverArtFile?: File;
   }) => {
     const result = await dispatch(createMusic({ musicData, token: authToken }));
     if (createMusic.fulfilled.match(result)) {
@@ -103,29 +99,6 @@ const MusicPage = () => {
   const handleDelete = (musicItem: any) => {
     dispatch(setCurrentMusic(musicItem));
     setIsDeleteModalOpen(true);
-  };
-
-  const handlePlayMusic = (musicItem: any) => {
-    if (currentAudio) {
-      currentAudio.pause();
-    }
-
-    if (musicItem.url) {
-      if (playingMusicId === musicItem.id) {
-        setPlayingMusicId(null);
-        setCurrentAudio(null);
-      } else {
-        const audio = new Audio(musicItem.url);
-        audio.play();
-        setCurrentAudio(audio);
-        setPlayingMusicId(musicItem.id);
-
-        audio.addEventListener('ended', () => {
-          setCurrentAudio(null);
-          setPlayingMusicId(null);
-        });
-      }
-    }
   };
 
   const handlePageChange = (page: number) => {
@@ -189,7 +162,6 @@ const MusicPage = () => {
           music={music as any}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onPlay={handlePlayMusic}
           loading={loading}
         />
 
@@ -200,23 +172,6 @@ const MusicPage = () => {
               currentPage={metadata.currentPage}
               totalPages={metadata.totalPages}
               onPageChange={handlePageChange}
-            />
-          </div>
-        )}
-
-        {/* Audio Preview Player - Hidden but plays audio */}
-        {playingMusicId && currentAudio && (
-          <div className="fixed bottom-4 right-4 z-50 max-w-sm">
-            <AudioPreviewPlayer
-              src={currentAudio.src}
-              isPlaying={!!playingMusicId}
-              onPlayStateChange={(playing) => {
-                if (!playing) {
-                  currentAudio.pause();
-                  setPlayingMusicId(null);
-                  setCurrentAudio(null);
-                }
-              }}
             />
           </div>
         )}
