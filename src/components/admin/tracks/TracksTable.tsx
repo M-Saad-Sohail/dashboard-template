@@ -64,7 +64,7 @@ const TracksTable: React.FC<TracksTableProps> = ({
       header: 'Title',
       accessor: 'title',
       cell: (value) => (
-        <p className="text-black dark:text-white font-medium">{value}</p>
+        <p className="text-sm text-black dark:text-white font-medium">{value}</p>
       ),
       sortable: true,
     },
@@ -72,7 +72,7 @@ const TracksTable: React.FC<TracksTableProps> = ({
       header: 'Artist',
       accessor: 'artist',
       cell: (value) => (
-        <p className="text-gray-600 dark:text-gray-400">{value || '-'}</p>
+        <p className="text-xs text-gray-600 dark:text-gray-400">{value || '-'}</p>
       ),
       sortable: true,
     },
@@ -96,7 +96,7 @@ const TracksTable: React.FC<TracksTableProps> = ({
       header: 'Duration',
       accessor: 'duration',
       cell: (value) => (
-        <p className="text-black dark:text-white">{formatDuration(value)}</p>
+        <p className="text-xs text-black dark:text-white">{formatDuration(value)}</p>
       ),
       sortable: true,
     },
@@ -110,7 +110,7 @@ const TracksTable: React.FC<TracksTableProps> = ({
             className="hover:text-primary transition-colors flex items-center gap-2"
             title={playingTrackId === row.id ? "Stop preview" : "Play preview"}
           >
-            <PlayIcon className={`h-5 w-5 ${playingTrackId === row.id ? 'text-primary' : ''}`} />
+            <PlayIcon className={`h-4 w-4 ${playingTrackId === row.id ? 'text-primary' : ''}`} />
           </button>
         ) : (
           <span className="text-gray-400">-</span>
@@ -153,20 +153,20 @@ const TracksTable: React.FC<TracksTableProps> = ({
       header: 'Actions',
       accessor: 'id',
       cell: (value, row) => (
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => onEdit(row)}
             className="hover:text-primary transition-colors"
             title="Edit track"
           >
-            <PencilIcon className="h-5 w-5" />
+            <PencilIcon className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(row)}
             className="hover:text-danger transition-colors"
             title="Delete track"
           >
-            <TrashIcon className="h-5 w-5" />
+            <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       ),
@@ -199,7 +199,7 @@ const TracksTable: React.FC<TracksTableProps> = ({
       pageSize={10}
       searchable={true}
       searchPlaceholder="Search tracks..."
-      containerClassName="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark"
+      containerClassName="border border-gray-200 bg-white shadow-default dark:border-gray-600 dark:bg-gray-900"
       className="w-full"
       selectable={showBulkActions}
       selectedRows={selectedTracks}

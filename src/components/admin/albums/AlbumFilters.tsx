@@ -45,7 +45,7 @@ const AlbumFilters: React.FC<AlbumFiltersProps> = ({ filters, onApplyFilters }) 
   ];
 
   return (
-    <div className="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark mb-6">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 pb-12 shadow-default dark:border-gray-600 dark:bg-gray-900 mb-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 items-end">
         <Select
           label="Section"
@@ -69,20 +69,23 @@ const AlbumFilters: React.FC<AlbumFiltersProps> = ({ filters, onApplyFilters }) 
           onChange={(e) => setLocalFilters(prev => ({ ...prev, search: e.target.value }))}
         />
 
-        <div className="flex gap-2">
-          <ButtonAction
-            variant="primary"
-            onClick={handleApply}
-            className="flex-1"
-          >
-            Apply Filters
-          </ButtonAction>
-          <ButtonAction
-            variant="secondary"
-            onClick={handleReset}
-          >
-            Reset
-          </ButtonAction>
+        <div className="mb-4.5">
+          <div className="flex gap-2">
+            <ButtonAction
+              variant="primary"
+              onClick={handleApply}
+              className="flex-1 h-11"
+            >
+              Apply Filters
+            </ButtonAction>
+            <ButtonAction
+              variant="secondary"
+              onClick={handleReset}
+              className="h-11"
+            >
+              Reset
+            </ButtonAction>
+          </div>
         </div>
       </div>
     </div>

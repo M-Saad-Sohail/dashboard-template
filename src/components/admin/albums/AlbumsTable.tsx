@@ -22,14 +22,14 @@ const AlbumsTable: React.FC<AlbumsTableProps> = ({ albums, onEdit, onDelete, loa
       header: 'Cover',
       accessor: 'coverPortrait',
       cell: (value, row) => (
-        <div className="relative h-14 w-14">
+        <div className="relative h-14 w-14 overflow-hidden">
           {value ? (
             <Image
               src={value}
               alt={row.title}
-              width={60}
-              height={60}
-              className="rounded object-cover"
+              width={56}
+              height={56}
+              className="h-14 w-14 rounded object-cover"
             />
           ) : (
             <div className="flex h-14 w-14 items-center justify-center rounded bg-gray-3 dark:bg-gray-700">
@@ -138,7 +138,7 @@ const AlbumsTable: React.FC<AlbumsTableProps> = ({ albums, onEdit, onDelete, loa
       pageSize={10}
       searchable={true}
       searchPlaceholder="Search albums..."
-      containerClassName="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark"
+      containerClassName="rounded-sm border border-gray-200 bg-white shadow-default dark:border-gray-600 dark:bg-boxdark"
       className="w-full"
     />
   );

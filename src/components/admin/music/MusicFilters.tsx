@@ -36,7 +36,7 @@ const MusicFilters: React.FC<MusicFiltersProps> = ({ filters, onApplyFilters }) 
   ];
 
   return (
-    <div className="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark mb-6">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 shadow-default dark:border-gray-600 dark:bg-gray-900 mb-6">
       <div className="flex items-center gap-3 text-primary mb-4">
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -46,12 +46,14 @@ const MusicFilters: React.FC<MusicFiltersProps> = ({ filters, onApplyFilters }) 
       
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-end">
         <Select
+          label="Section"
           options={sectionOptions}
           value={localFilters.section}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, section: value }))}
         />
 
         <InputField
+          label="Search"
           name="search"
           type="text"
           placeholder="Search by title or artist..."
@@ -59,20 +61,23 @@ const MusicFilters: React.FC<MusicFiltersProps> = ({ filters, onApplyFilters }) 
           onChange={(e) => setLocalFilters(prev => ({ ...prev, search: e.target.value }))}
         />
 
-        <div className="flex gap-2">
-          <ButtonAction
-            variant="primary"
-            onClick={handleApply}
-            className="flex-1"
-          >
-            Apply Filters
-          </ButtonAction>
-          <ButtonAction
-            variant="secondary"
-            onClick={handleReset}
-          >
-            Reset
-          </ButtonAction>
+        <div className="mb-4.5">
+          <div className="flex gap-2">
+            <ButtonAction
+              variant="primary"
+              onClick={handleApply}
+              className="flex-1 h-11"
+            >
+              Apply Filters
+            </ButtonAction>
+            <ButtonAction
+              variant="secondary"
+              onClick={handleReset}
+              className="h-11"
+            >
+              Reset
+            </ButtonAction>
+          </div>
         </div>
       </div>
     </div>

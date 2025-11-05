@@ -71,50 +71,39 @@ const TrackFilters: React.FC<TrackFiltersProps> = ({ filters, onApplyFilters }) 
   ];
 
   return (
-    <div className="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark mb-6 dark:bg-gray-900">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 items-end">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 pb-12 shadow-default dark:border-gray-600 dark:bg-gray-900 mb-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 items-end">
         <Select
+          label="Section"
           options={sectionOptions}
+          value={localFilters.section}
           onChange={(value) => setLocalFilters(prev => ({ ...prev, section: value }))}
         />
 
         <Select
+          label="Group By"
           options={groupByOptions}
+          value={localFilters.groupBy}
           onChange={(value) => dispatch(setFilters({ groupBy: value }))}
         />
 
-        <InputField
-          name="search"
-          type="text"
-          placeholder="Search by title or artist..."
-          value={localFilters.search}
-          onChange={(e) => setLocalFilters(prev => ({ ...prev, search: e.target.value }))}
-        />
-
-        <Select
-          onChange={(value) => setLocalFilters(prev => ({ ...prev, released: value }))}
-          options={releasedOptions}
-        />
-
-        <Select
-          onChange={(value) => setLocalFilters(prev => ({ ...prev, premium: value }))}
-          options={premiumOptions}
-        />
-
-        <div className="flex gap-2">
-          <ButtonAction
-            variant="primary"
-            onClick={handleApply}
-            className="flex-1"
-          >
-            Apply
-          </ButtonAction>
-          <ButtonAction
-            variant="secondary"
-            onClick={handleReset}
-          >
-            Reset
-          </ButtonAction>
+        <div className="mb-4.5">
+          <div className="flex gap-2">
+            <ButtonAction
+              variant="primary"
+              onClick={handleApply}
+              className="flex-1 h-11"
+            >
+              Apply
+            </ButtonAction>
+            <ButtonAction
+              variant="secondary"
+              onClick={handleReset}
+              className="h-11"
+            >
+              Reset
+            </ButtonAction>
+          </div>
         </div>
       </div>
     </div>

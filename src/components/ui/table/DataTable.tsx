@@ -157,26 +157,26 @@ export function DataTable<T extends Record<string, any>>({
   return (
     <div className={`space-y-4 dark:bg-gray-900 ${containerClassName}`}> 
       {searchable && (
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center pt-4 pl-4">
           <input
             type="text"
             placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={handleSearch}
-            className="px-4 py-2.5 border border-stroke rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-form-input dark:border-strokedark dark:text-white dark:focus:border-primary placeholder:text-gray-400 dark:placeholder:text-gray-500 dark:bg-gray-900"
+            className="px-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:border-primary placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <div className="max-w-full overflow-x-auto dark:bg-gray-900">
+      <div className="border border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-900 overflow-visible">
+        <div className="max-w-full overflow-x-auto dark:bg-gray-900 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-6 pr-6">
           <Table className={`dark:bg-gray-900 ${className}`}>
-            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05] dark:bg-gray-900">
+            <TableHeader className="border-b border-gray-200 dark:border-gray-600 dark:bg-gray-900">
               <TableRow>
                 {selectable && (
                   <TableCell
                     isHeader
-                    className="px-5 py-3 w-12"
+                    className="px-3 py-2 w-10"
                   >
                     <input
                       type="checkbox"
@@ -194,7 +194,7 @@ export function DataTable<T extends Record<string, any>>({
                   <TableCell
                     key={index}
                     isHeader
-                    className={`px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 ${
+                    className={`px-3 py-2 font-medium text-gray-500 text-start text-xs dark:text-gray-400 ${
                       column.headerClassName || ""
                     }`}
                   >
@@ -224,21 +224,21 @@ export function DataTable<T extends Record<string, any>>({
               </TableRow>
             </TableHeader>
 
-            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+            <TableBody className="divide-y divide-gray-200 dark:divide-gray-600 dark:bg-gray-900">
               {loading ? (
-                <TableRow>
+                <TableRow className="dark:bg-gray-900">
                   <TableCell
                     colSpan={columns.length + (selectable ? 1 : 0)}
-                    className="px-5 py-8 text-center text-gray-500 dark:text-gray-400"
+                    className="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400 dark:bg-gray-900"
                   >
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : paginatedData.length === 0 ? (
-                <TableRow>
+                <TableRow className="dark:bg-gray-900">
                   <TableCell
                     colSpan={columns.length + (selectable ? 1 : 0)}
-                    className="px-5 py-8 text-center text-gray-500 dark:text-gray-400"
+                    className="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400 dark:bg-gray-900"
                   >
                     {emptyMessage}
                   </TableCell>
@@ -248,9 +248,9 @@ export function DataTable<T extends Record<string, any>>({
                   const rowId = getRowId(row);
                   const isSelected = selectedRows.includes(rowId);
                   return (
-                    <TableRow key={rowIndex} className={isSelected ? 'bg-gray-2 dark:bg-meta-4' : ''}>
+                    <TableRow key={rowIndex} className={isSelected ? 'bg-gray-2 dark:bg-meta-4' : 'dark:bg-gray-900'}>
                       {selectable && (
-                        <TableCell className="px-5 py-4 w-12">
+                        <TableCell className="px-3 py-2 w-10 dark:bg-gray-900">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -264,7 +264,7 @@ export function DataTable<T extends Record<string, any>>({
                         return (
                           <TableCell
                             key={colIndex}
-                            className={`px-5 py-4 text-start ${
+                            className={`px-3 py-2 text-sm text-start dark:bg-gray-900 dark:text-white whitespace-nowrap ${
                               column.className || ""
                             }`}
                           >

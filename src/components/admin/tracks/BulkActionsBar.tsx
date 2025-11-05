@@ -24,24 +24,25 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="sticky top-0 z-10 flex items-center justify-between gap-4 rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
-      <div className="flex items-center gap-4">
-        <p className="text-black dark:text-white font-medium">
+    <div className="sticky top-0 z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-sm border border-gray-200 bg-white p-4 shadow-default dark:border-gray-600 dark:bg-gray-900 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <p className="text-black dark:text-white font-medium text-sm sm:text-base">
           {selectedCount} track{selectedCount !== 1 ? 's' : ''} selected
         </p>
         
-        <div className="h-4 w-px bg-stroke dark:bg-strokedark"></div>
+        <div className="hidden sm:block h-4 w-px bg-gray-200 dark:bg-gray-600"></div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ButtonAction
             variant="secondary"
             size="sm"
             onClick={onMarkAsReleased}
             disabled={loading}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-xs sm:text-sm"
           >
             <CheckIcon className="h-4 w-4" />
-            Mark as Released
+            <span className="hidden sm:inline">Mark as Released</span>
+            <span className="sm:hidden">Released</span>
           </ButtonAction>
 
           <ButtonAction
@@ -49,10 +50,11 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             size="sm"
             onClick={onMarkAsPremium}
             disabled={loading}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-xs sm:text-sm"
           >
             <CheckIcon className="h-4 w-4" />
-            Make Premium
+            <span className="hidden sm:inline">Make Premium</span>
+            <span className="sm:hidden">Premium</span>
           </ButtonAction>
 
           <ButtonAction
@@ -60,10 +62,11 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             size="sm"
             onClick={onBulkDelete}
             disabled={loading}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-xs sm:text-sm"
           >
             <TrashIcon className="h-4 w-4" />
-            Delete Selected
+            <span className="hidden sm:inline">Delete Selected</span>
+            <span className="sm:hidden">Delete</span>
           </ButtonAction>
         </div>
       </div>
@@ -73,7 +76,7 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
         size="sm"
         onClick={onClearSelection}
         disabled={loading}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 text-xs sm:text-sm w-full sm:w-auto justify-center"
       >
         <CloseIcon className="h-4 w-4" />
         Clear Selection
