@@ -182,6 +182,15 @@ export const verifyEmailCode = createAsyncThunk<
   }
 );
 
+// ─── SIGN OUT THUNK ──────
+export const signOut = createAsyncThunk(
+  'auth/signOut',
+  async () => {
+    // This will trigger the rootReducer to clear all states
+    return;
+  }
+);
+
 
 
 const authSlice = createSlice({
